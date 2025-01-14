@@ -14,4 +14,7 @@ url = ('https://newsapi.org/v2/everything?'
 
 response = requests.get(url)
 
-print(response.json())
+articles = response.json()['articles']
+
+for key, value in enumerate(articles):
+       print(value['content'])
