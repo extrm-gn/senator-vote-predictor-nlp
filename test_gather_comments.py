@@ -126,11 +126,11 @@ def getcomments(video, max_comments=50):
 
 if __name__ == "__main__":
 
-    query = "Bong Go"
+    query = "Kiko Pangilinan"
     published_after = "2025-01-01T00:00:00Z"
     published_before = "2025-01-15T23:59:59Z"
 
-    videos = search_videos(query, max_results=2, published_after=published_after, published_before=published_before)
+    videos = search_videos(query, max_results=3, published_after=published_after, published_before=published_before)
     print("Videos Found:")
     for video in videos:
         print(f"{video['title']} (ID: {video['video_id']}) Published At: {video['published_at']}")
