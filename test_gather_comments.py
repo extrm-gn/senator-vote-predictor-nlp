@@ -52,85 +52,102 @@ def search_videos(query, max_results=10, published_after=None, published_before=
     return videos
 
 
-def getcomments(video, max_comments=50):
+def getcomments(video, max_comments=99):
     """Fetch a limited number of comments and include video metadata."""
     video_title, video_published_at = video["title"], video["published_at"]
 
-    request = youtube.commentThreads().list(
-        part="snippet",
-        videoId=video["video_id"],
-        maxResults=min(max_comments, 100)
-    )
-
-    comments = []
-    total_fetched = 0
-
-    response = request.execute()
-
-    # Get the comments from the response.
-    for item in response['items']:
-        comment = item['snippet']['topLevelComment']['snippet']
-        public = item['snippet']['isPublic']
-        comments.append([
-            video_title,
-            video_published_at,
-            comment['authorDisplayName'],
-            comment['publishedAt'],
-            comment['likeCount'],
-            comment['textOriginal'],
-            video["video_id"],
-            public
-        ])
-        total_fetched += 1
-        if total_fetched >= max_comments:
-            break
-
-    # If more comments are needed and available, loop through additional pages.
-    while total_fetched < max_comments:
-        try:
-            nextPageToken = response['nextPageToken']
-        except KeyError:
-            break
-        nextRequest = youtube.commentThreads().list(
+    try:
+        request = youtube.commentThreads().list(
             part="snippet",
             videoId=video["video_id"],
-            maxResults=min(max_comments - total_fetched, 100),
-            pageToken=nextPageToken
+            maxResults=min(max_comments, 100)
         )
-        response = nextRequest.execute()
-        for item in response['items']:
-            comment = item['snippet']['topLevelComment']['snippet']
-            public = item['snippet']['isPublic']
-            comments.append([
-                video_title,
-                video_published_at,
-                comment['authorDisplayName'],
-                comment['publishedAt'],
-                comment['likeCount'],
-                comment['textOriginal'],
-                video["video_id"],
-                public
-            ])
-            total_fetched += 1
-            if total_fetched >= max_comments:
-                break
+
+        comments = []
+        total_fetched = 0
+
+        try:
+            response = request.execute()
+
+            # Get the comments from the response.
+            for item in response['items']:
+                comment = item['snippet']['topLevelComment']['snippet']
+                public = item['snippet']['isPublic']
+                comments.append([
+                    video_title,
+                    video_published_at,
+                    comment['authorDisplayName'],
+                    comment['publishedAt'],
+                    comment['likeCount'],
+                    comment['textOriginal'],
+                    video["video_id"],
+                    public
+                ])
+                total_fetched += 1
+                if total_fetched >= max_comments:
+                    break
+
+            # If more comments are needed and available, loop through additional pages.
+            while total_fetched < max_comments:
+                try:
+                    nextPageToken = response['nextPageToken']
+                except KeyError:
+                    break
+                nextRequest = youtube.commentThreads().list(
+                    part="snippet",
+                    videoId=video["video_id"],
+                    maxResults=min(max_comments - total_fetched, 100),
+                    pageToken=nextPageToken
+                )
+                response = nextRequest.execute()
+                for item in response['items']:
+                    comment = item['snippet']['topLevelComment']['snippet']
+                    public = item['snippet']['isPublic']
+                    comments.append([
+                        video_title,
+                        video_published_at,
+                        comment['authorDisplayName'],
+                        comment['publishedAt'],
+                        comment['likeCount'],
+                        comment['textOriginal'],
+                        video["video_id"],
+                        public
+                    ])
+                    total_fetched += 1
+                    if total_fetched >= max_comments:
+                        break
+
+        except KeyError as e:
+            print(f"KeyError: {e} - No comments found or comment fetching interrupted.")
+
+    except googleapiclient.errors.HttpError as e:
+        print(f"HttpError: {e} - Comments might be disabled for video ID: {video['video_id']}")
+
+    # If no comments were fetched, log a message and skip appending
+    if not comments:
+        print(f"No comments found for video: {video['title']} ({video['video_id']})")
+        return None
 
     # Create DataFrame with additional columns for video metadata
     df2 = pd.DataFrame(
         comments,
         columns=['video_title', 'video_published_at', 'author', 'updated_at', 'like_count', 'text', 'video_id', 'public']
     )
-    pd.set_option('display.max_columns', None)
+
+    # Append to the CSV file without overwriting
+    df2.to_csv('trial1.csv', mode='a', index=False, header=not os.path.exists('trial1.csv'))
+
     return df2
+
 
 
 if __name__ == "__main__":
 
-    query = "Kiko Pangilinan"
+    query = "Philippines"
     published_after = "2025-01-01T00:00:00Z"
     published_before = "2025-01-15T23:59:59Z"
 
-    videos = search_videos(query, max_results=3, published_after=published_after, published_before=published_before)
+    videos = search_videos(query, max_results=15, published_after=published_after, published_before=published_before)
     print("Videos Found:")
     for video in videos:
         print(f"{video['title']} (ID: {video['video_id']}) Published At: {video['published_at']}")
