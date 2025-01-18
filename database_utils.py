@@ -67,29 +67,91 @@ def init_db():
     return 0
 
 
-def insert_comments(comments):
-    #TODO: Create placeholder code for the insertion of comments that would come from calling a function from another file
+def connection_postgres():
 
-    return 0
+    load_dotenv()
+
+    db_host = os.getenv("DB_HOST")
+    db_name = os.getenv("DB_NAME")
+    db_user = os.getenv("DB_USER")
+    db_password = os.getenv("DB_PASSWORD")
+    db_port = os.getenv("DB_PORT")
+
+    return db_host, db_name, db_user, db_password, db_port
+
+
+def insert_video(video_id, title, description, comment_count, upload_date, channel_id):
+
+    db_host, db_name, db_user, db_password, db_port = connection_postgres()
+
+    conn = psycopg2.connect(dbname=db_name,
+        user=db_user,
+        password=db_password,
+        host=db_host,
+        port=db_port)
+
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO video (video_id, title, description, comment_count, upload_date, channel_id)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        ON CONFLICT (video_id) DO NOTHING
+    """, (video_id, title, description, comment_count, upload_date, channel_id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+def insert_author(author_id, author_name):
+
+    db_host, db_name, db_user, db_password, db_port = connection_postgres()
+
+    conn = psycopg2.connect(dbname=db_name,
+                            user=db_user,
+                            password=db_password,
+                            host=db_host,
+                            port=db_port)
+
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO author (author_id, author_name)
+        VALUES (%s, %s)
+        ON CONFLICT (author_id) DO NOTHING
+    """, (author_id, author_name))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+def insert_comment(comment_id, comment_text, date_id, author_id, video_id):
+    db_host, db_name, db_user, db_password, db_port = connection_postgres()
+
+    conn = psycopg2.connect(dbname=db_name,
+                            user=db_user,
+                            password=db_password,
+                            host=db_host,
+                            port=db_port)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO comment (comment_id, comment_text, date_id, author_id, video_id)
+        VALUES (%s, %s, %s, %s, %s)
+        ON CONFLICT (comment_id) DO NOTHING
+    """, (comment_id, comment_text, date_id, author_id, video_id))
+    conn.commit()
+    cursor.close()
+    conn.close()
 
 
 def main():
     conn = None
     try:
-        load_dotenv()
-
-        # Access environment variables
-        db_host = os.getenv("DB_HOST")
-        db_name = os.getenv("DB_NAME")
-        db_user = os.getenv("DB_USER")
-        db_password = os.getenv("DB_PASSWORD")
-        db_port = os.getenv("DB_PORT")
+        db_host, db_name, db_user, db_password, db_port = connection_postgres()
 
         conn = psycopg2.connect(dbname=db_name,
-        user=db_user,
-        password=db_password,
-        host=db_host,
-        port=db_port)
+                                user=db_user,
+                                password=db_password,
+                                host=db_host,
+                                port=db_port)
 
         cur = conn.cursor()
 
