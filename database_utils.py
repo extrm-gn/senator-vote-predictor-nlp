@@ -55,11 +55,12 @@ def init_db():
                              author_name VARCHAR(150));"""
 
     create_comment_table = """CREATE TABLE IF NOT EXISTS comment (
-                              comment_id INT PRIMARY KEY, 
+                              comment_id SERIAL PRIMARY KEY, 
                               comment_text TEXT,
                               date_id INT,
                               author_id INT,
                               video_id INT,
+                              like_count INT,
                               FOREIGN_KEY(author_id) REFERENCES author(author_id),
                               FOREIGN_KEY(video_id) REFERENCES video(video_id),
                               FOREIGN_KEY(date_id) REFERENCES date(date_id));"""
