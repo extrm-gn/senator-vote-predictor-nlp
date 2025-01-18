@@ -40,20 +40,21 @@ def connection_postgres():
     db_password = os.getenv("DB_PASSWORD")
     db_port = os.getenv("DB_PORT")
 
-    return db_host, db_name, db_user, db_password, db_port
+    conn = psycopg2.connect(dbname=db_name,
+                            user=db_user,
+                            password=db_password,
+                            host=db_host,
+                            port=db_port)
+
+    cursor = conn.cursor()
+
+    return db_host, db_name, db_user, db_password, db_port, conn, cursor
 
 
 def insert_video(video_id, title, description, comment_count, upload_date, channel_id):
 
-    db_host, db_name, db_user, db_password, db_port = connection_postgres()
+    db_host, db_name, db_user, db_password, db_port, conn, cursor = connection_postgres()
 
-    conn = psycopg2.connect(dbname=db_name,
-        user=db_user,
-        password=db_password,
-        host=db_host,
-        port=db_port)
-
-    cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO video (video_id, title, description, comment_count, upload_date, channel_id)
         VALUES (%s, %s, %s, %s, %s, %s)
@@ -66,15 +67,7 @@ def insert_video(video_id, title, description, comment_count, upload_date, chann
 
 def insert_author(author_id, author_name):
 
-    db_host, db_name, db_user, db_password, db_port = connection_postgres()
-
-    conn = psycopg2.connect(dbname=db_name,
-                            user=db_user,
-                            password=db_password,
-                            host=db_host,
-                            port=db_port)
-
-    cursor = conn.cursor()
+    db_host, db_name, db_user, db_password, db_port, conn, cursor = connection_postgres()
 
     cursor.execute("""
         INSERT INTO author (author_id, author_name)
@@ -87,14 +80,8 @@ def insert_author(author_id, author_name):
 
 
 def insert_comment(comment_id, comment_text, date_id, author_id, video_id):
-    db_host, db_name, db_user, db_password, db_port = connection_postgres()
+    db_host, db_name, db_user, db_password, db_port, conn, cursor = connection_postgres()
 
-    conn = psycopg2.connect(dbname=db_name,
-                            user=db_user,
-                            password=db_password,
-                            host=db_host,
-                            port=db_port)
-    cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO comment (comment_id, comment_text, date_id, author_id, video_id)
         VALUES (%s, %s, %s, %s, %s)
@@ -108,15 +95,7 @@ def insert_comment(comment_id, comment_text, date_id, author_id, video_id):
 def main():
     conn = None
     try:
-        db_host, db_name, db_user, db_password, db_port = connection_postgres()
-
-        conn = psycopg2.connect(dbname=db_name,
-                                user=db_user,
-                                password=db_password,
-                                host=db_host,
-                                port=db_port)
-
-        cur = conn.cursor()
+        db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
 
         cur.close()
         conn.close()
