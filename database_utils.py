@@ -1,16 +1,8 @@
 import psycopg2
 from datetime import date, timedelta, datetime
 import pandas as pd
-
-# cur.execute("""CREATE TABLE IF NOT EXISTS person (
-#                 id INT PRIMARY KEY,
-#                 name VARCHAR(255),
-#                 age INT,
-#                 gender CHAR);""")
-#
-# cur.execute("""INSERT INTO person (id,name,age,gender) VALUES
-#                 (2, 'Mike', 30, 'm')""")
-# conn.commit()
+import os
+from dotenv import load_dotenv
 
 def create_date_dimension():
     start_date = datetime(2024, 10, 1)
@@ -74,17 +66,30 @@ def init_db():
 
     return 0
 
-init_db()
 
 def insert_comments(comments):
     #TODO: Create placeholder code for the insertion of comments that would come from calling a function from another file
 
     return 0
 
+
 def main():
+    conn = None
     try:
-        conn = psycopg2.connect(host="localhost", dbname="postgres", user="postgres",
-                                password="1234", port=5432)
+        load_dotenv()
+
+        # Access environment variables
+        db_host = os.getenv("DB_HOST")
+        db_name = os.getenv("DB_NAME")
+        db_user = os.getenv("DB_USER")
+        db_password = os.getenv("DB_PASSWORD")
+        db_port = os.getenv("DB_PORT")
+
+        conn = psycopg2.connect(dbname=db_name,
+        user=db_user,
+        password=db_password,
+        host=db_host,
+        port=db_port)
 
         cur = conn.cursor()
 
@@ -96,3 +101,7 @@ def main():
         if conn:
             conn.close()
             print("Connection closed.")
+
+
+if __name__ == "__main__":
+    main()
