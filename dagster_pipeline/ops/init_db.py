@@ -37,15 +37,7 @@ def init_db():
 
     conn = None
     try:
-        db_host, db_name, db_user, db_password, db_port = connection_postgres()
-
-        conn = psycopg2.connect(dbname=db_name,
-                                user=db_user,
-                                password=db_password,
-                                host=db_host,
-                                port=db_port)
-
-        cur = conn.cursor()
+        db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
 
         cur.execute(create_date_table)
         cur.execute(create_video_table)
