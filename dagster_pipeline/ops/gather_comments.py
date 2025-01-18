@@ -2,7 +2,8 @@ import googleapiclient.discovery
 import pandas as pd
 from dotenv import load_dotenv
 import os
-from database_utils import init_db, insert_video, insert_comment, insert_author, connection_postgres
+from database_utils import insert_video, insert_comment, insert_author, connection_postgres
+from init_db import init_db
 
 load_dotenv()
 
