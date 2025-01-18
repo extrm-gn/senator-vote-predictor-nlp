@@ -35,8 +35,6 @@ def init_db():
 
     date_df = create_date_dimension()
 
-    print(date_df)
-
     create_date_table = """CREATE TABLE IF NOT EXISTS date (
                            date_id INT PRIMARY KEY,
                            month INT,
@@ -61,9 +59,38 @@ def init_db():
                               author_id INT,
                               video_id INT,
                               like_count INT,
-                              FOREIGN_KEY(author_id) REFERENCES author(author_id),
-                              FOREIGN_KEY(video_id) REFERENCES video(video_id),
-                              FOREIGN_KEY(date_id) REFERENCES date(date_id));"""
+                              FOREIGN KEY(author_id) REFERENCES author(author_id),
+                              FOREIGN KEY(video_id) REFERENCES video(video_id),
+                              FOREIGN KEY(date_id) REFERENCES date(date_id));"""
+
+
+    conn = None
+    try:
+        db_host, db_name, db_user, db_password, db_port = connection_postgres()
+
+        conn = psycopg2.connect(dbname=db_name,
+                                user=db_user,
+                                password=db_password,
+                                host=db_host,
+                                port=db_port)
+
+        cur = conn.cursor()
+
+        cur.execute(create_date_table)
+        cur.execute(create_video_table)
+        cur.execute(create_author_table)
+        cur.execute(create_comment_table)
+
+        conn.commit()
+
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        if conn:
+            conn.close()
+            print("Connection closed.")
 
     return 0
 
