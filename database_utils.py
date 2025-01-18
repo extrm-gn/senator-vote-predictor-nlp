@@ -20,10 +20,7 @@ cur = conn.cursor()
 cur.close()
 conn.close()
 
-
-def init_db():
-    #TODO: create necessary tables such as the date, video, author, and comment table
-
+def create_date_dimension():
     start_date = datetime(2024, 10, 1)
     end_date = datetime(2025, 5, 12)
 
@@ -36,22 +33,36 @@ def init_db():
     date_data = []
 
     for date in date_list:
-
         date_dict = {
             'id': f"{date.month}{date.day}{date.year}",
             'month': date.month,
             'day': date.day,
-           'year': date.year
+            'year': date.year
         }
         date_data.append(date_dict)
 
     date_df = pd.DataFrame(date_data).set_index('id')
+
+    return date_df
+
+
+def init_db():
+    #TODO: create necessary tables such as the date, video, author, and comment table
+
+    date_df = create_date_dimension()
+
     print(date_df)
 
-    create_date = """CREATE TABLE IF NOT EXISTS date (
+    create_date_table = """CREATE TABLE IF NOT EXISTS date (
                      date_id PRIMARY KEY,
                      month INT,
                      day INT);"""
+
+    create_video_table = """"""
+
+    create_author_table = """"""
+
+    create_comment_table = """"""
 
     return 0
 
