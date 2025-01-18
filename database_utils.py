@@ -54,15 +54,31 @@ def init_db():
     print(date_df)
 
     create_date_table = """CREATE TABLE IF NOT EXISTS date (
-                     date_id PRIMARY KEY,
-                     month INT,
-                     day INT);"""
+                           date_id INT PRIMARY KEY,
+                           month INT,
+                           day INT);"""
 
-    create_video_table = """"""
+    create_video_table = """CREATE TABLE IF NOT EXISTS video (
+                            video_id INT PRIMARY KEY, 
+                            title VARCHAR(255),
+                            description VARCHAR(255),
+                            comment_count INT,
+                            upload_date DATE,
+                            channel_id INT);"""
 
-    create_author_table = """"""
+    create_author_table = """CREATE TABLE IF NOT EXISTS author (
+                             author_id SERIAL PRIMARY KEY,
+                             author_name VARCHAR(150));"""
 
-    create_comment_table = """"""
+    create_comment_table = """CREATE TABLE IF NOT EXISTS comment (
+                              comment_id INT PRIMARY KEY, 
+                              comment_text TEXT,
+                              date_id INT,
+                              author_id INT,
+                              video_id INT,
+                              FOREIGN_KEY(author_id) REFERENCES author(author_id),
+                              FOREIGN_KEY(video_id) REFERENCES video(video_id),
+                              FOREIGN_KEY(date_id) REFERENCES date(date_id));"""
 
     return 0
 
