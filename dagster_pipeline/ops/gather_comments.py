@@ -146,19 +146,41 @@ def gather_comments_op():
     published_after = "2025-01-01T00:00:00Z"
     published_before = "2025-01-15T23:59:59Z"
 
+    all_data = []
+    author_table_data = []
+    comment_table_data = []
+
+
     videos = search_videos(query, max_results=1, published_after=published_after, published_before=published_before)
     print("Videos Found:")
     for video in videos:
         print(f"{video['title']} (ID: {video['video_id']}) Published At: {video['upload_date']}")
         print(video.keys())
+
+        video_dict = {
+            "video_id": video['video_id'],
+            "title": video['title'],
+            "description": video['description'],
+            "upload_date": video['upload_date'],
+            "channel_id": video['channel_id']
+        }
+        all_data.append(video_dict)
+
         break
+
+
+    df_merge = pd.DataFrame(all_data)
 
     # Fetch comments for each video
     for video in videos:
         print(f"\nFetching comments for video: {video['title']} ({video['video_id']})")
         comments_df = getcomments(video, max_comments=20)  # Fetch 20 comments per video
-        print(comments_df.head())  # Display the first few rows
+        #print(comments_df.head())  # Display the first few rows
         print(comments_df.keys())
+
+        df_merge = df_merge.merge(comments_df, on='video_id', how='inner')
+
+        print(df_merge.keys())
 
         break
 
