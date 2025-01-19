@@ -92,6 +92,26 @@ def insert_comment(comment_id, comment_text, date_id, author_id, video_id):
     conn.close()
 
 
+def insert_code(df, table_name):
+    # Generate SQL statements
+    sql_statements = []
+    for index, row in df.iterrows():
+        # Escape single quotes in string values
+        values = [
+            f"'{str(value).replace("'", "''")}'" if isinstance(value, str) else str(value)
+            for value in row
+        ]
+        sql = f"INSERT INTO {table_name} ({', '.join(df.columns)}) VALUES ({', '.join(values)});"
+        sql_statements.append(sql)
+
+    # Combine all SQL statements
+    sql_script = "\n".join(sql_statements)
+
+    print(sql_script)
+
+    return sql_script
+
+
 def main():
     conn = None
     try:
