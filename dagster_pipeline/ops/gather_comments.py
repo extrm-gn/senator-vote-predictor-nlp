@@ -2,7 +2,7 @@ import googleapiclient.discovery
 import pandas as pd
 from dotenv import load_dotenv
 import os
-from database_utils import insert_video, insert_comment, insert_author, connection_postgres
+from database_utils import insert_video, insert_comment, insert_author, connection_postgres, insert_code
 from init_db import init_db
 
 load_dotenv()
@@ -135,14 +135,14 @@ def getcomments(video, max_comments=99):
     # Create DataFrame with additional columns for video metadata
     df2 = pd.DataFrame(
         comments,
-        columns=['video_title', 'video_published_at', 'author', 'updated_at', 'like_count', 'text', 'video_id', 'public']
+        columns=['video_title', 'video_published_at', 'author', 'updated_at', 'like_count', 'comment_text', 'video_id', 'public']
     )
 
     return df2
 
 
 def gather_comments_op():
-    query = "Philippines"
+    query = "Senatorial Election"
     published_after = "2025-01-01T00:00:00Z"
     published_before = "2025-01-15T23:59:59Z"
 
@@ -181,28 +181,14 @@ def gather_comments_op():
         break
 
     video_df = df_merge[['video_id', 'title', 'description', 'upload_date', 'channel_id']].drop_duplicates()
-    author_df= df_merge['author']
-    comment_df = df_merge[['text']]
+    author_df= df_merge[['author', 'public']]
+    comment_df = df_merge[['comment_text', 'like_count']]
 
     db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
 
-    table_name = "video"
-
-    # Generate SQL statements
-    sql_statements = []
-    for index, row in video_df.iterrows():
-        # Escape single quotes in string values
-        values = [
-            f"'{str(value).replace("'", "''")}'" if isinstance(value, str) else str(value)
-            for value in row
-        ]
-        sql = f"INSERT INTO {table_name} ({', '.join(video_df.columns)}) VALUES ({', '.join(values)});"
-        sql_statements.append(sql)
-
-    # Combine all SQL statements
-    sql_script = "\n".join(sql_statements)
-
-    print(sql_script)
+    insert_code(video_df, "video")
+    insert_code(author_df, "author")
+    insert_code(comment_df, "comment")
 
     return video_df, author_df, comment_df
 
