@@ -2,7 +2,7 @@ import googleapiclient.discovery
 import pandas as pd
 from dotenv import load_dotenv
 import os
-from database_utils import insert_video, insert_comment, insert_author, connection_postgres, insert_code
+from database_utils import connection_postgres, insert_code, create_date_dimension
 from init_db import init_db
 from datetime import datetime
 
@@ -138,7 +138,7 @@ def getcomments(video, max_comments=99):
     # Create DataFrame with additional columns for video metadata
     df2 = pd.DataFrame(
         comments,
-        columns=['video_title', 'video_published_at', 'author','author_id', 'updated_at', 'like_count', 'comment_text', 'video_id', 'public']
+        columns=['video_title', 'video_published_at', 'author_name','author_id', 'updated_at', 'like_count', 'comment_text', 'video_id', 'public']
     )
 
     return df2
@@ -194,22 +194,30 @@ def gather_comments_op():
         break
 
     video_df = df_video[['video_id', 'title', 'description', 'upload_date', 'channel_id']].drop_duplicates()
-    author_df= df_merge[['author', 'author_id']]
+    author_df= df_merge[['author_name', 'author_id']]
     comment_df = df_merge[['comment_text', 'like_count', 'date_id', 'video_id','author_id']]
-
-    db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
-
-    insert_code(video_df, "video")
-    insert_code(author_df, "author")
-    insert_code(comment_df, "comment")
 
     return video_df, author_df, comment_df
 
 
-def insert_comments_op():
+def insert_comments_op(video_df,author_df, comment_df):
     db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
 
+    video_df, author_df, comment_df = gather_comments_op()
+
+    video_sql_command = insert_code(video_df, "video")
+    author_sql_command = insert_code(author_df, "author")
+    comment_sql_command = insert_code(comment_df, "comment")
+
+    cur.execute(video_sql_command)
+    cur.execute(author_sql_command)
+    cur.execute(comment_sql_command)
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
 
 if __name__ == "__main__":
-
-    gather_comments_op()
+    video_df, author_df, comment_df = gather_comments_op()
+    insert_comments_op(video_df, author_df, comment_df)
