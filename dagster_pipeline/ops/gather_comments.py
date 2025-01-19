@@ -17,6 +17,20 @@ youtube = googleapiclient.discovery.build(
 )
 
 
+def get_video_in_table():
+    db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
+
+    cur.execute("""SELECT video_id FROM video;""")
+
+    # Fetch all rows from the result of the query
+    video_ids = cur.fetchall()
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    return video_ids
+
 def get_video_details(video_id):
     """Fetch video details like title and publishing date."""
     request = youtube.videos().list(
@@ -29,32 +43,56 @@ def get_video_details(video_id):
     return video_title, video_published_at
 
 
-def search_videos(query, max_results=10, published_after=None, published_before=None, region_code="PH"):
-    """Search for videos based on a query and date range."""
-    request = youtube.search().list(
-        part="snippet",
-        q=query,
-        type="video",
-        order="date",
-        maxResults=max_results,
-        publishedAfter=published_after,
-        publishedBefore=published_before,
-        regionCode = region_code
-    )
-    response = request.execute()
+def search_videos(query, max_results=1, published_after=None, published_before=None, region_code="PH"):
+    """Search for videos based on a query and date range, and skip videos already in the database."""
 
-    # Extract video IDs and titles from the search results
-    videos = [
-        {
-            "video_id": item['id']['videoId'],
-            "title": item['snippet']['title'],
-            "upload_date": item['snippet']['publishedAt'],
-            "channel_id": item['snippet']['channelId'],
-            "description": item['snippet']['description']
-        }
-        for item in response['items']
-    ]
-    return videos
+    # Get video IDs already in the database to avoid re-fetching them
+    video_ids_in_db = get_video_in_table()  # Get video IDs from the table
+
+    # Extract just the video IDs from the fetched data (assuming it's a list of tuples)
+    existing_video_ids = [video[0] for video in video_ids_in_db]  # Assuming video_id is the first column
+
+    # A list to hold the new videos that are not in the database
+    new_videos = []
+
+    # Keep searching until we get the desired number of new videos
+    while len(new_videos) < max_results:
+        # Search for videos on YouTube
+        request = youtube.search().list(
+            part="snippet",
+            q=query,
+            type="video",
+            order="date",
+            maxResults=max_results - len(new_videos),  # Adjust the number of results to get
+            publishedAfter=published_after,
+            publishedBefore=published_before,
+            regionCode=region_code
+        )
+        response = request.execute()
+
+        # Extract video IDs and titles from the search results, skipping videos already in the database
+        for item in response['items']:
+            video_id = item['id']['videoId']
+            if video_id not in existing_video_ids:
+                new_videos.append({
+                    "video_id": video_id,
+                    "title": item['snippet']['title'],
+                    "upload_date": item['snippet']['publishedAt'],
+                    "channel_id": item['snippet']['channelId'],
+                    "description": item['snippet']['description']
+                })
+                existing_video_ids.append(video_id)  # Add this video_id to the list of existing ones
+
+            # Stop once we've reached the desired number of new videos
+            if len(new_videos) >= max_results:
+                break
+
+        # If we've exhausted all results and still haven't reached max_results, stop
+        if len(response['items']) == 0:
+            print("No more new videos found.")
+            break
+
+    return new_videos
 
 
 def getcomments(video, max_comments=99):
@@ -200,7 +238,7 @@ def gather_comments_op():
     return video_df, author_df, comment_df
 
 
-def insert_comments_op(video_df,author_df, comment_df):
+def insert_comments_op():
     db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
 
     video_df, author_df, comment_df = gather_comments_op()
@@ -219,5 +257,4 @@ def insert_comments_op(video_df,author_df, comment_df):
     conn.close()
 
 if __name__ == "__main__":
-    video_df, author_df, comment_df = gather_comments_op()
-    insert_comments_op(video_df, author_df, comment_df)
+    insert_comments_op()
