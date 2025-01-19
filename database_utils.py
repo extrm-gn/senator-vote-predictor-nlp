@@ -18,14 +18,14 @@ def create_date_dimension():
 
     for date in date_list:
         date_dict = {
-            'id': f"{date.month}{date.day}{date.year}",
+            'date_id': f"{date.month}{date.day}{date.year}",
             'month': date.month,
             'day': date.day,
             'year': date.year
         }
         date_data.append(date_dict)
 
-    date_df = pd.DataFrame(date_data).set_index('id')
+    date_df = pd.DataFrame(date_data)
 
     return date_df
 
