@@ -147,9 +147,6 @@ def gather_comments_op():
     published_before = "2025-01-15T23:59:59Z"
 
     all_data = []
-    author_table_data = []
-    comment_table_data = []
-
 
     videos = search_videos(query, max_results=1, published_after=published_after, published_before=published_before)
     print("Videos Found:")
@@ -179,10 +176,40 @@ def gather_comments_op():
         print(comments_df.keys())
 
         df_merge = df_merge.merge(comments_df, on='video_id', how='inner')
-
         print(df_merge.keys())
 
         break
+
+    video_df = df_merge[['video_id', 'title', 'description', 'upload_date', 'channel_id']].drop_duplicates()
+    author_df= df_merge['author']
+    comment_df = df_merge[['text']]
+
+    db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
+
+    table_name = "video"
+
+    # Generate SQL statements
+    sql_statements = []
+    for index, row in video_df.iterrows():
+        # Escape single quotes in string values
+        values = [
+            f"'{str(value).replace("'", "''")}'" if isinstance(value, str) else str(value)
+            for value in row
+        ]
+        sql = f"INSERT INTO {table_name} ({', '.join(video_df.columns)}) VALUES ({', '.join(values)});"
+        sql_statements.append(sql)
+
+    # Combine all SQL statements
+    sql_script = "\n".join(sql_statements)
+
+    print(sql_script)
+
+    return video_df, author_df, comment_df
+
+
+def insert_comments_op():
+    db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
+
 
 if __name__ == "__main__":
 
