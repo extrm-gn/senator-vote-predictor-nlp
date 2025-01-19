@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 from database_utils import insert_video, insert_comment, insert_author, connection_postgres, insert_code
 from init_db import init_db
+from datetime import datetime
 
 load_dotenv()
 
@@ -77,10 +78,12 @@ def getcomments(video, max_comments=99):
             for item in response['items']:
                 comment = item['snippet']['topLevelComment']['snippet']
                 public = item['snippet']['isPublic']
+                author_channel_id = comment.get('authorChannelId', {}).get('value', None)
                 comments.append([
                     video_title,
                     video_published_at,
                     comment['authorDisplayName'],
+                    author_channel_id,
                     comment['publishedAt'],
                     comment['likeCount'],
                     comment['textOriginal'],
@@ -135,7 +138,7 @@ def getcomments(video, max_comments=99):
     # Create DataFrame with additional columns for video metadata
     df2 = pd.DataFrame(
         comments,
-        columns=['video_title', 'video_published_at', 'author', 'updated_at', 'like_count', 'comment_text', 'video_id', 'public']
+        columns=['video_title', 'video_published_at', 'author','author_id', 'updated_at', 'like_count', 'comment_text', 'video_id', 'public']
     )
 
     return df2
@@ -165,7 +168,7 @@ def gather_comments_op():
 
         break
 
-
+    df_video = pd.DataFrame(all_data)
     df_merge = pd.DataFrame(all_data)
 
     # Fetch comments for each video
@@ -176,13 +179,23 @@ def gather_comments_op():
         print(comments_df.keys())
 
         df_merge = df_merge.merge(comments_df, on='video_id', how='inner')
+
+        df_merge['updated_at'] = pd.to_datetime(df_merge['updated_at'])
+
+        # Extract the month from the datetime column
+        df_merge['month'] = df_merge['updated_at'].dt.month
+        df_merge['day'] = df_merge['updated_at'].dt.day
+        df_merge['year'] = df_merge['updated_at'].dt.year
+
+        df_merge['date_id'] = df_merge['updated_at'].dt.strftime('%m%d%Y')
+
         print(df_merge.keys())
 
         break
 
-    video_df = df_merge[['video_id', 'title', 'description', 'upload_date', 'channel_id']].drop_duplicates()
-    author_df= df_merge[['author', 'public']]
-    comment_df = df_merge[['comment_text', 'like_count']]
+    video_df = df_video[['video_id', 'title', 'description', 'upload_date', 'channel_id']].drop_duplicates()
+    author_df= df_merge[['author', 'author_id']]
+    comment_df = df_merge[['comment_text', 'like_count', 'date_id', 'video_id','author_id']]
 
     db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
 
