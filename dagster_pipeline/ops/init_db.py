@@ -1,5 +1,5 @@
 import psycopg2
-from database_utils import create_date_dimension, connection_postgres
+from database_utils import create_date_dimension, connection_postgres, insert_code
 
 def init_db():
     #TODO: create necessary tables such as the date, video, author, and comment table
@@ -9,7 +9,8 @@ def init_db():
     create_date_table = """CREATE TABLE IF NOT EXISTS date (
                            date_id INT PRIMARY KEY,
                            month INT,
-                           day INT);"""
+                           day INT,
+                           year INT);"""
 
     create_video_table = """CREATE TABLE IF NOT EXISTS video (
                             video_id INT PRIMARY KEY, 
@@ -43,7 +44,7 @@ def init_db():
         cur.execute(create_video_table)
         cur.execute(create_author_table)
         cur.execute(create_comment_table)
-
+        cur.execute(insert_code(date_df, 'date'))
         conn.commit()
 
         cur.close()
@@ -56,3 +57,4 @@ def init_db():
             print("Connection closed.")
 
     return 0
+
