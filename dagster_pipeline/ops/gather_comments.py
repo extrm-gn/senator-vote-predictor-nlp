@@ -30,7 +30,8 @@ def get_video_details(video_id):
 
 
 def search_videos(query, max_results=10, published_after=None, published_before=None, region_code="PH"):
-    """Search for videos based on a query and date range."""
+    """Search for videos based on a query and date range and get comment count."""
+
     request = youtube.search().list(
         part="snippet",
         q=query,
@@ -39,21 +40,38 @@ def search_videos(query, max_results=10, published_after=None, published_before=
         maxResults=max_results,
         publishedAfter=published_after,
         publishedBefore=published_before,
-        regionCode = region_code
+        regionCode=region_code
     )
     response = request.execute()
 
-    # Extract video IDs and titles from the search results
-    videos = [
-        {
-            "video_id": item['id']['videoId'],
-            "title": item['snippet']['title'],
-            "upload_date": item['snippet']['publishedAt'],
-            "channel_id": item['snippet']['channelId'],
-            "description": item['snippet']['description']
-        }
-        for item in response['items']
-    ]
+    videos = []
+
+    for item in response['items']:
+        video_id = item['id']['videoId']
+        video_title = item['snippet']['title']
+        upload_date = item['snippet']['publishedAt']
+        channel_id = item['snippet']['channelId']
+        description = item['snippet']['description']
+
+        # Fetch comment count for each video
+        video_request = youtube.videos().list(
+            part="statistics",
+            id=video_id
+        )
+        video_response = video_request.execute()
+
+        # Extract comment count
+        comment_count = int(video_response['items'][0]['statistics'].get('commentCount', 0))
+
+        videos.append({
+            "video_id": video_id,
+            "title": video_title,
+            "upload_date": upload_date,
+            "channel_id": channel_id,
+            "description": description,
+            "comment_count": comment_count  # Add the comment count to the video data
+        })
+
     return videos
 
 
@@ -171,19 +189,20 @@ def gather_comments_op():
             "title": video['title'],
             "description": video['description'],
             "upload_date": video['upload_date'],
-            "channel_id": video['channel_id']
+            "channel_id": video['channel_id'],
+            "comment_count": video['comment_count']
         }
         all_data.append(video_dict)
 
     df_video = pd.DataFrame(all_data)
-    df_merged = pd.DataFrame(all_data)
+    df_merge = pd.DataFrame()
 
     # Fetch comments for each video
     for video in videos:
         print(f"\nFetching comments for video: {video['title']} ({video['video_id']})")
         comments_df = getcomments(video, max_comments=20)  # Fetch 20 comments per video
         if comments_df is not None:  # Only merge if comments are found
-            df_merge = df_merged.merge(comments_df, on='video_id', how='inner')
+            df_merge = pd.concat([df_merge, comments_df], ignore_index=True)  # Append new comments
 
             df_merge['updated_at'] = pd.to_datetime(df_merge['updated_at'])
 
@@ -197,7 +216,7 @@ def gather_comments_op():
             print(df_merge.keys())
 
     # Prepare dataframes for insertion
-    video_df = df_video[['video_id', 'title', 'description', 'upload_date', 'channel_id']].drop_duplicates()
+    video_df = df_video[['video_id', 'title', 'description', 'upload_date', 'channel_id', 'comment_count']].drop_duplicates()
 
     # Only include rows where comments exist
     if not df_merge.empty:
