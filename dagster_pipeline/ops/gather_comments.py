@@ -62,6 +62,7 @@ def getcomments(video, max_comments=99):
     video_title, video_published_at = video["title"], video["upload_date"]
 
     try:
+        # Get video details like comment count
         video_request = youtube.videos().list(
             part="statistics",
             id=video["video_id"]
@@ -69,6 +70,10 @@ def getcomments(video, max_comments=99):
         video_response = video_request.execute()
         total_comments = int(video_response["items"][0]["statistics"].get("commentCount", 0))
         print(f"Total comments for video {video['video_id']}: {total_comments}")
+
+        if total_comments == 0:
+            print(f"No comments for video {video['video_id']}. Skipping comment collection.")
+            return None  # Return None if no comments are found
 
         request = youtube.commentThreads().list(
             part="snippet",
@@ -142,24 +147,11 @@ def getcomments(video, max_comments=99):
     if total_comments > 0:
         df2 = pd.DataFrame(
             comments,
-            columns=['video_title', 'video_published_at', 'author_name','author_id', 'updated_at', 'like_count', 'comment_text', 'video_id', 'public']
+            columns=['video_title', 'video_published_at', 'author_name', 'author_id', 'updated_at', 'like_count', 'comment_text', 'video_id', 'public']
         )
-    elif total_comments == 0:
-        # If no comments, return a DataFrame with default dummy values
-        df2 = pd.DataFrame({
-            'video_title': [video_title],
-            'video_published_at': [video_published_at],
-            'author_name': ['VIDEO_NO_COMMENT'],
-            'author_id': ['999abc'],
-            'updated_at': ['2099-12-31 00:00:00'],
-            'like_count': [0],
-            'comment_text': [''],
-            'video_id': [video['video_id']],
-            'public': [1]
-        })
-        print("No comments found, returning dummy data.")
-    return df2
-
+        return df2
+    else:
+        return None  # No comments found, return None
 
 def gather_comments_op():
     query = "Senatorial Election"
@@ -190,40 +182,47 @@ def gather_comments_op():
     for video in videos:
         print(f"\nFetching comments for video: {video['title']} ({video['video_id']})")
         comments_df = getcomments(video, max_comments=20)  # Fetch 20 comments per video
-        #print(comments_df.head())  # Display the first few rows
-        print(comments_df)
+        if comments_df is not None:  # Only merge if comments are found
+            df_merge = df_merged.merge(comments_df, on='video_id', how='inner')
 
-        df_merge = df_merged.merge(comments_df, on='video_id', how='inner')
+            df_merge['updated_at'] = pd.to_datetime(df_merge['updated_at'])
 
-        df_merge['updated_at'] = pd.to_datetime(df_merge['updated_at'])
+            # Extract the month from the datetime column
+            df_merge['month'] = df_merge['updated_at'].dt.month
+            df_merge['day'] = df_merge['updated_at'].dt.day
+            df_merge['year'] = df_merge['updated_at'].dt.year
 
-        # Extract the month from the datetime column
-        df_merge['month'] = df_merge['updated_at'].dt.month
-        df_merge['day'] = df_merge['updated_at'].dt.day
-        df_merge['year'] = df_merge['updated_at'].dt.year
+            df_merge['date_id'] = df_merge['updated_at'].dt.strftime('%m%d%Y')
 
-        df_merge['date_id'] = df_merge['updated_at'].dt.strftime('%m%d%Y')
+            print(df_merge.keys())
 
-        print(df_merge.keys())
-
+    # Prepare dataframes for insertion
     video_df = df_video[['video_id', 'title', 'description', 'upload_date', 'channel_id']].drop_duplicates()
-    author_df= df_merge[['author_name', 'author_id']]
-    comment_df = df_merge[['comment_text', 'like_count', 'date_id', 'video_id','author_id']]
 
+    # Only include rows where comments exist
+    if not df_merge.empty:
+        author_df = df_merge[['author_name', 'author_id']]
+        comment_df = df_merge[['comment_text', 'like_count', 'date_id', 'video_id', 'author_id']]
+    else:
+        author_df = pd.DataFrame()  # Empty DataFrame if no comments
+        comment_df = pd.DataFrame()  # Empty DataFrame if no comments
 
     return video_df, author_df, comment_df
 
-
-def insert_comments_op(video_df,author_df, comment_df):
+def insert_comments_op(video_df, author_df, comment_df):
     db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
 
-    video_sql_command = insert_code(video_df, "video")
-    author_sql_command = insert_code(author_df, "author")
-    comment_sql_command = insert_code(comment_df, "comment")
+    if not video_df.empty:
+        video_sql_command = insert_code(video_df, "video")
+        cur.execute(video_sql_command)
 
-    cur.execute(video_sql_command)
-    cur.execute(author_sql_command)
-    cur.execute(comment_sql_command)
+    if not author_df.empty:
+        author_sql_command = insert_code(author_df, "author")
+        cur.execute(author_sql_command)
+
+    if not comment_df.empty:
+        comment_sql_command = insert_code(comment_df, "comment")
+        cur.execute(comment_sql_command)
 
     conn.commit()
 

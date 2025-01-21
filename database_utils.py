@@ -109,7 +109,7 @@ def insert_code(df, table_name):
             sql = f"INSERT INTO {table_name} ({', '.join(df.columns)}) VALUES ({', '.join(values)}) ON CONFLICT (author_id) DO NOTHING;"
             sql_statements.append(sql)
         elif table_name == 'comment':
-            sql = f"INSERT INTO {table_name} (comment_id, {', '.join(df.columns)}) VALUES (nextval('comment_id_seq'), {', '.join(values)}) ON CONFLICT (video_id, author_id, comment_text) DO NOTHING;"
+            sql = f"INSERT INTO {table_name} ({', '.join(df.columns)}) VALUES ({', '.join(values)}) ON CONFLICT (video_id, author_id, comment_text) DO NOTHING;"
             sql_statements.append(sql)
         elif table_name == 'date':
             sql = f"INSERT INTO {table_name} ({', '.join(df.columns)}) VALUES ({', '.join(values)});"
