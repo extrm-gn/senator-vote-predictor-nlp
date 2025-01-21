@@ -33,7 +33,12 @@ def init_db():
                               like_count INT,
                               FOREIGN KEY(author_id) REFERENCES author(author_id),
                               FOREIGN KEY(video_id) REFERENCES video(video_id),
-                              FOREIGN KEY(date_id) REFERENCES date(date_id));"""
+                              FOREIGN KEY(date_id) REFERENCES date(date_id),
+                              UNIQUE (video_id, author_id, comment_text));"""
+
+    create_sequence_comment_id = """CREATE SEQUENCE comment_id_seq START 1;"""
+    create_dummy_date = """INSERT INTO date (date_id, month, day, year)
+                            VALUES (12312099, 12, 31, 2099);"""
 
 
     conn = None
@@ -44,7 +49,9 @@ def init_db():
         cur.execute(create_video_table)
         cur.execute(create_author_table)
         cur.execute(create_comment_table)
+        #cur.execute(create_sequence_comment_id)
         cur.execute(insert_code(date_df, 'date'))
+        cur.execute(create_dummy_date)
         conn.commit()
 
         cur.close()
@@ -58,4 +65,3 @@ def init_db():
 
     return 0
 
-init_db()
