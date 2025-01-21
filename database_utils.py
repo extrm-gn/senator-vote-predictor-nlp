@@ -79,14 +79,14 @@ def insert_author(author_id, author_name):
     conn.close()
 
 
-def insert_comment(comment_id, comment_text, date_id, author_id, video_id):
+def insert_comment(comment_text, like_count, date_id, author_id, video_id):
     db_host, db_name, db_user, db_password, db_port, conn, cursor = connection_postgres()
 
     cursor.execute("""
-        INSERT INTO comment (comment_id, comment_text, date_id, author_id, video_id)
+        INSERT INTO comment (comment_text, like_count, date_id, author_id, video_id)
         VALUES (%s, %s, %s, %s, %s)
         ON CONFLICT (comment_id) DO NOTHING
-    """, (comment_id, comment_text, date_id, author_id, video_id))
+    """, (comment_text,like_count, date_id, author_id, video_id))
     conn.commit()
     cursor.close()
     conn.close()
@@ -94,6 +94,20 @@ def insert_comment(comment_id, comment_text, date_id, author_id, video_id):
 
 def insert_code(df, table_name):
     # Generate SQL statements
+    db_host, db_name, db_user, db_password, db_port, conn, cursor = connection_postgres()
+
+    print(f"Inserting into {table_name} with DataFrame shape: {df.shape}")
+
+    cursor.execute('SELECT DISTINCT video_id FROM video;')
+
+    # Fetch all rows from the executed query
+    rows = cursor.fetchall()
+
+    # Convert the result into a list of video_ids
+    unique_videos = [row[0] for row in rows]
+
+    conn.commit()
+
     sql_statements = []
     for index, row in df.iterrows():
         # Escape single quotes in string values
@@ -101,12 +115,26 @@ def insert_code(df, table_name):
             f"'{str(value).replace("'", "''")}'" if isinstance(value, str) else str(value)
             for value in row
         ]
-        sql = f"INSERT INTO {table_name} ({', '.join(df.columns)}) VALUES ({', '.join(values)});"
-        sql_statements.append(sql)
+        if table_name == 'video' and row['video_id'] in unique_videos:
+            print(f"duplicate: {df['comment_count']}")
+            continue
+        else:
+            sql = f"INSERT INTO {table_name} ({', '.join(df.columns)}) VALUES ({', '.join(values)});"
+            sql_statements.append(sql)
 
     # Combine all SQL statements
     sql_script = "\n".join(sql_statements)
 
+    try:
+        if sql_statements:
+            cursor.execute(sql_script)
+            conn.commit()
+            print(f"Inserted {len(sql_statements)} rows into {table_name}.")
+    except Exception as e:
+        print(f"Error executing SQL: {e}")
+        conn.rollback()
+
+    print("sql script")
     print(sql_script)
 
     return sql_script
