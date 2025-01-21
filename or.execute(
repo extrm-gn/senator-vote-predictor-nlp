@@ -1,0 +1,215 @@
+[33mcommit b3ae4f9e6d55d80ba30b0661020023ae1e2d5511[m[33m ([m[1;36mHEAD[m[33m)[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Tue Jan 21 15:55:21 2025 +0800
+
+    new updated commit
+
+[33mcommit 81a5d65470b3b348c13066977882875a46923307[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sun Jan 19 10:30:51 2025 +0800
+
+    first try on insertion done, just need to do an error case when duplicate data are inserted
+
+[33mcommit f6d1f5f1145db11861b84f022131b6b97cfcf340[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sun Jan 19 10:30:04 2025 +0800
+
+    fixed error on data type of the ids, i thought they were int but actually chars
+
+[33mcommit 496bc242cfe33ec0fa1ae31c6962def32d9965dc[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sun Jan 19 10:10:19 2025 +0800
+
+    placed the insertion of date data inside init_db.py
+
+[33mcommit 22acff19faf6ec04199c0e2ed2f7fbd67e91c9c8[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sun Jan 19 10:02:36 2025 +0800
+
+    fixed creation of date df since the id doesnt appear
+
+[33mcommit 4b9abf4b36f2d61e454252ba6d0c28e21479dee7[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sun Jan 19 09:58:26 2025 +0800
+
+    done with video, author, comment insert commands
+
+[33mcommit 20edc2b9445e1cac2a182d07ecba9c701a70a585[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sun Jan 19 09:20:14 2025 +0800
+
+    successfully made insert code, would just fix the comment code
+
+[33mcommit 3747163229d66251e879b49c8dcb02971de8fc3d[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sun Jan 19 09:10:42 2025 +0800
+
+    made an insert_codefunction that would be called to create insert code
+
+[33mcommit f37a552cbf5f3f58145441af5b793d7fce86908e[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sun Jan 19 09:08:04 2025 +0800
+
+    added insert code syntax for sql and would transfer it to database_utils.py
+
+[33mcommit b6c61527a871c192ed5062c6ac1af0599835b5dd[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sat Jan 18 18:20:14 2025 +0800
+
+    made a general dataframe and just get needed data from there to each table
+
+[33mcommit 5a3fb2cc0d35571a99c2cc44e22a77379de69dbe[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sat Jan 18 17:55:42 2025 +0800
+
+    made changes based on changes in connection_postgres
+
+[33mcommit ad957bc31b20655190244f620f943d0cf4d67a80[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sat Jan 18 17:54:21 2025 +0800
+
+    fixed the connection_postgres, added the conneciton and cursor itself
+
+[33mcommit ae1dadadd704de0d9ede98fd8bee58a68a2c95a1[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sat Jan 18 17:46:19 2025 +0800
+
+    changed func importation in gather_comments.py
+
+[33mcommit 3a4ce679f3d5ab6c02f748eb197661b9a36f24a1[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sat Jan 18 17:45:21 2025 +0800
+
+    added the init_db func to its own file and then removed the original func in database_utils
+
+[33mcommit bc65b4ba689ee346cf67a0f605e921df176154f4[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sat Jan 18 17:43:10 2025 +0800
+
+    added a init_db.py file to seperate the creation of the tables from the insertion logic and db connection
+
+[33mcommit 027304c25566f79fb96f96a309bf5ec8a3b12fef[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sat Jan 18 17:41:36 2025 +0800
+
+    added and fixed formatting of the gathering of comments
+
+[33mcommit 4e37b7bafc47fe8fdbc210b43756530f2fc8fef5[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sat Jan 18 17:32:45 2025 +0800
+
+    fixed error on FOREIGN_KEY, made the init_db() to be able to create table connected to db
+
+[33mcommit 600168f6e355379f16ae26628586170d9278452a[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sat Jan 18 16:03:06 2025 +0800
+
+    added like_count and changed the data type of comment_id to serial
+
+[33mcommit 9366f6a30ef0c548fab533ba9be450a565c9bf17[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sat Jan 18 15:39:17 2025 +0800
+
+    added directories dagster_pipeline then added gather_comments.py
+
+[33mcommit fb171c488e2f031aeaa2994a99d88bbe19b1b925[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sat Jan 18 15:09:28 2025 +0800
+
+    added seperate connection to postgres function for modularity, and added insertion function for each table to be accessed from other files
+
+[33mcommit 7e1e9703b2b977223087976399e144ef49ff360e[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sat Jan 18 14:59:57 2025 +0800
+
+    fixed connection issue in postgres
+
+[33mcommit 2c3744624eea0c5e4cb97979c12aa2bb4fc867b9[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sat Jan 18 14:44:47 2025 +0800
+
+    created a main function to clean up file
+
+[33mcommit c3619385bc1ed1c1667adfadd957f1e9c6df4419[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sat Jan 18 14:25:08 2025 +0800
+
+    done creating table sql code
+
+[33mcommit c01789b3ff1ffc4cf1cd7509eb137b8ffd1f763c[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sat Jan 18 14:10:04 2025 +0800
+
+    made the creation of the dates into its own function
+
+[33mcommit 9d477dd5e9611945dd2e6ba88915f7e05e034435[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sat Jan 18 14:05:11 2025 +0800
+
+    done creating the logic of creating date data and turned it into a pandas dataframe
+
+[33mcommit 7d54dbe06522bef9cae9493496da357f32728afb[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Sat Jan 18 13:41:30 2025 +0800
+
+    added todo list
+
+[33mcommit c6a9ce5c2e91c1e98bc1a7707ab653c15ff032f7[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Fri Jan 17 15:03:20 2025 +0800
+
+    added trial creation of table and insertion
+
+[33mcommit 0bc70288ebdf905a9954e39e3824bfb3825bc06a[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Fri Jan 17 13:51:43 2025 +0800
+
+    made the df to be exported as csv for fine tuning testing
+
+[33mcommit 87f9646ad2f7311728800df96b403daf74d17581[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Thu Jan 16 10:02:15 2025 +0800
+
+    test for yt comments done, just have to plan for getting historical data/comments and current
+
+[33mcommit 78bd2a2bf5916518b4ac924845ae54bf14c897ea[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Thu Jan 16 09:31:53 2025 +0800
+
+    implemented youtube api, made a template code for gathering comments
+
+[33mcommit 036e8123b0933c433c936bf7769ac5377d77439e[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Tue Jan 14 14:56:49 2025 +0800
+
+    added test_gather_comments.py for testing of scraping youtube comments
+
+[33mcommit e5babd10b2dc5216066af02bfe2035e471977cc3[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Tue Jan 14 14:14:40 2025 +0800
+
+    used GNEWS as API would just avail free trial when needed
+
+[33mcommit 1fd0dddb196081758ebee928963799fb09d092c6[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Tue Jan 14 13:35:09 2025 +0800
+
+    looked at content of each articles, only displays first few characters
+
+[33mcommit d185df8a01c29440830d1a8fe02779ed46caefb4[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Tue Jan 14 13:27:00 2025 +0800
+
+    Remove .env from tracking
+
+[33mcommit 8929b2192af0a2892b889b99345efb50e79d964d[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Tue Jan 14 13:17:55 2025 +0800
+
+    added test_gather_news.py, newsapi.org only provides first sentence
+
+[33mcommit 9abb256bcccc18105699e5d7b8b4bb3f0f7245c0[m
+Author: Marc Rosales <samtam22k@gmail.com>
+Date:   Tue Jan 14 12:52:11 2025 +0800
+
+    Initial commit

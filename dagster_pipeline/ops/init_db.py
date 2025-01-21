@@ -1,5 +1,4 @@
 import psycopg2
-import traceback
 from database_utils import create_date_dimension, connection_postgres, insert_code
 
 def init_db():
@@ -18,8 +17,6 @@ def init_db():
                             title VARCHAR(255),
                             description VARCHAR(255),
                             comment_count INT,
-                            like_count INT,
-                            view_count INT,
                             upload_date DATE,
                             channel_id VARCHAR(25));"""
 
@@ -52,18 +49,8 @@ def init_db():
 
         cur.close()
         conn.close()
-    except psycopg2.Error as e:
-        # Print the detailed error message
-        print("Database error occurred:")
-        print(f"Error Type: {e.__class__.__name__}")
-        print(f"Error Message: {str(e)}")
-        print("Error Code:", e.pgcode)
-        print("Detailed Traceback:")
-        traceback.print_exc()
     except Exception as e:
-        # Catch general exceptions
-        print(f"An unexpected error occurred: {str(e)}")
-        traceback.print_exc()
+        print(f"An error occurred: {e}")
     finally:
         if conn:
             conn.close()
@@ -71,3 +58,4 @@ def init_db():
 
     return 0
 
+init_db()
