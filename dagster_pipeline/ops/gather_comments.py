@@ -174,7 +174,7 @@ def gather_comments_op():
     all_comments_data = pd.DataFrame()
 
     queries = [{'Kiko Pangilinan': 'C', 'Benhur Abalos': 'A', 'Abby Binay': 'A', 'Pia Cayetano': 'A', 'Panfilo Lacson': 'A',
-                'Lito lapit': 'A', 'Imee Marcos': 'A', 'Manny Pacquiao': 'A', 'Bong Revilla': 'A', 'Tito Sotto': 'A', 'Francis Tolentino': 'A',
+                'Lito lapid': 'A', 'Imee Marcos': 'A', 'Manny Pacquiao': 'A', 'Bong Revilla': 'A', 'Tito Sotto': 'A', 'Francis Tolentino': 'A',
                 'Erwin Tulfo': 'A', 'Camille Villar': 'A'}]
 
     queries = [{'Pia Cayetano': 'A', 'Lito Lapid':'A'}]
