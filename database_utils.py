@@ -50,48 +50,6 @@ def connection_postgres():
 
     return db_host, db_name, db_user, db_password, db_port, conn, cursor
 
-
-def insert_video(video_id, title, description, comment_count, upload_date, channel_id):
-
-    db_host, db_name, db_user, db_password, db_port, conn, cursor = connection_postgres()
-
-    cursor.execute("""
-        INSERT INTO video (video_id, title, description, comment_count, upload_date, channel_id)
-        VALUES (%s, %s, %s, %s, %s, %s)
-        ON CONFLICT (video_id) DO NOTHING
-    """, (video_id, title, description, comment_count, upload_date, channel_id))
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-
-def insert_author(author_id, author_name):
-
-    db_host, db_name, db_user, db_password, db_port, conn, cursor = connection_postgres()
-
-    cursor.execute("""
-        INSERT INTO author (author_id, author_name)
-        VALUES (%s, %s)
-        ON CONFLICT (author_id) DO NOTHING
-    """, (author_id, author_name))
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-
-def insert_comment(comment_id, comment_text, date_id, author_id, video_id):
-    db_host, db_name, db_user, db_password, db_port, conn, cursor = connection_postgres()
-
-    cursor.execute("""
-        INSERT INTO comment (comment_id, comment_text, date_id, author_id, video_id)
-        VALUES (%s, %s, %s, %s, %s)
-        ON CONFLICT (comment_id) DO NOTHING
-    """, (comment_id, comment_text, date_id, author_id, video_id))
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-
 def insert_code(df, table_name):
     # Generate SQL statements
     sql_statements = []
