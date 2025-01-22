@@ -46,12 +46,19 @@ def init_db():
     try:
         db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
 
+        cur.execute("SELECT COUNT(*) FROM Date")
+        date_count = cur.fetchone()[0]
+
+        cur.execute("""SELECT * FROM Date """)
         cur.execute(create_date_table)
         cur.execute(create_video_table)
         cur.execute(create_author_table)
         cur.execute(create_comment_table)
-        cur.execute(insert_code(date_df, 'date'))
-        cur.execute(create_dummy_date)
+
+        if date_count == 0:
+            cur.execute(insert_code(date_df, 'date'))
+            cur.execute(create_dummy_date)
+
         conn.commit()
 
         cur.close()
