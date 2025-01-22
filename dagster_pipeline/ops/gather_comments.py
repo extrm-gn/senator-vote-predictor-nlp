@@ -172,15 +172,14 @@ def getcomments(video, max_comments=99):
         return None  # No comments found, return None
 
 def gather_comments_op():
-    published_after = "2024-12-01T00:00:00Z"
-    published_before = "2025-01-15T23:59:59Z"
 
-    all_videos_data = []
     all_comments_data = pd.DataFrame()
 
     queries = [{'Kiko Pangilinan': 'C', 'Benhur Abalos': 'A', 'Abby Binay': 'A', 'Pia Cayetano': 'A', 'Panfilo Lacson': 'A',
                 'Lito lapit': 'A', 'Imee Marcos': 'A', 'Manny Pacquiao': 'A', 'Bong Revilla': 'A', 'Tito Sotto': 'A', 'Francis Tolentino': 'A',
                 'Erwin Tulfo': 'A', 'Camille Villar': 'A'}]
+
+    queries = [{'Kiko Pangilinan': 'C'}]
 
     all_videos_data = []  # Initialize the list to store video data
 

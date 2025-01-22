@@ -18,7 +18,7 @@ def create_date_dimension():
 
     for date in date_list:
         date_dict = {
-            'date_id': f"{date.month}{date.day}{date.year}",
+            'date_id': f"{date.month:02}{date.day:02}{date.year}",
             'month': date.month,
             'day': date.day,
             'year': date.year

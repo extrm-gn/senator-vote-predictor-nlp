@@ -65,3 +65,4 @@ def init_db():
 
     return 0
 
+init_db()
