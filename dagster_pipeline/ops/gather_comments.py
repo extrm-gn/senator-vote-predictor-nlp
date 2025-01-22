@@ -2,6 +2,7 @@ import googleapiclient.discovery
 import pandas as pd
 from dotenv import load_dotenv
 import os
+from text_utils import get_translation
 from database_utils import connection_postgres, insert_code, create_date_dimension
 from init_db import init_db
 from datetime import datetime
@@ -10,7 +11,7 @@ load_dotenv()
 
 api_service_name = "youtube"
 api_version = "v3"
-DEVELOPER_KEY = os.getenv('YT2_API_KEY')
+DEVELOPER_KEY = os.getenv('YT3_API_KEY')
 
 youtube = googleapiclient.discovery.build(
     api_service_name, api_version, developerKey=DEVELOPER_KEY
@@ -172,14 +173,17 @@ def getcomments(video, max_comments=99):
         return None  # No comments found, return None
 
 def gather_comments_op():
+    published_after = "2024-12-01T00:00:00Z"
+    published_before = "2025-01-15T23:59:59Z"
 
+    all_videos_data = []
     all_comments_data = pd.DataFrame()
 
     queries = [{'Kiko Pangilinan': 'C', 'Benhur Abalos': 'A', 'Abby Binay': 'A', 'Pia Cayetano': 'A', 'Panfilo Lacson': 'A',
                 'Lito lapit': 'A', 'Imee Marcos': 'A', 'Manny Pacquiao': 'A', 'Bong Revilla': 'A', 'Tito Sotto': 'A', 'Francis Tolentino': 'A',
                 'Erwin Tulfo': 'A', 'Camille Villar': 'A'}]
 
-    queries = [{'Kiko Pangilinan': 'C'}]
+    queries = [{'Pia Cayetano': 'A', 'Lito Lapid':'A'}]
 
     all_videos_data = []  # Initialize the list to store video data
 
@@ -208,11 +212,11 @@ def gather_comments_op():
                 }
                 all_videos_data.append(video_dict)
 
-            # Fetch comments for each video
-            print(f"\nFetching comments for video: {video['title']} ({video['video_id']})")
-            comments_df = getcomments(video, max_comments=20)
-            if comments_df is not None:  # Only merge if comments are found
-                all_comments_data = pd.concat([all_comments_data, comments_df], ignore_index=True)
+                # Fetch comments for each video
+                print(f"\nFetching comments for video: {video['title']} ({video['video_id']})")
+                comments_df = getcomments(video, max_comments=100)
+                if comments_df is not None:  # Only merge if comments are found
+                    all_comments_data = pd.concat([all_comments_data, comments_df], ignore_index=True)
 
     # Prepare video DataFrame
     video_df = pd.DataFrame(all_videos_data).drop_duplicates()
@@ -226,7 +230,10 @@ def gather_comments_op():
         all_comments_data['date_id'] = all_comments_data['updated_at'].dt.strftime('%m%d%Y')
 
         author_df = all_comments_data[['author_name', 'author_id']].drop_duplicates()
-        comment_df = all_comments_data[['comment_text', 'like_count', 'date_id', 'video_id', 'author_id']].drop_duplicates()
+        all_comments_data['translated_comment_text'] = all_comments_data['comment_text'].apply(
+            lambda x: get_translation(x))
+
+        comment_df = all_comments_data[['comment_text','translated_comment_text', 'like_count', 'date_id', 'video_id', 'author_id']].drop_duplicates()
     else:
         author_df = pd.DataFrame()  # Empty DataFrame if no comments
         comment_df = pd.DataFrame()  # Empty DataFrame if no comments
