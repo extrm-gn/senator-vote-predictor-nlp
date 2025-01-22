@@ -5,8 +5,8 @@ import os
 from dotenv import load_dotenv
 
 def create_date_dimension():
-    start_date = datetime(2024, 10, 1)
-    end_date = datetime(2025, 5, 12)
+    start_date = datetime(2020, 10, 1)
+    end_date = datetime(2029, 5, 12)
 
     date_list = []
 
@@ -112,7 +112,7 @@ def insert_code(df, table_name):
             sql = f"INSERT INTO {table_name} ({', '.join(df.columns)}) VALUES ({', '.join(values)}) ON CONFLICT (video_id, author_id, comment_text) DO NOTHING;"
             sql_statements.append(sql)
         elif table_name == 'date':
-            sql = f"INSERT INTO {table_name} ({', '.join(df.columns)}) VALUES ({', '.join(values)});"
+            sql = f"INSERT INTO {table_name} ({', '.join(df.columns)}) VALUES ({', '.join(values)}) ON CONFLICT (date_id) DO NOTHING;"
             sql_statements.append(sql)
 
 

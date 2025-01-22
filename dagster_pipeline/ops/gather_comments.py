@@ -10,7 +10,7 @@ load_dotenv()
 
 api_service_name = "youtube"
 api_version = "v3"
-DEVELOPER_KEY = os.getenv('YT_API_KEY')
+DEVELOPER_KEY = os.getenv('YT2_API_KEY')
 
 youtube = googleapiclient.discovery.build(
     api_service_name, api_version, developerKey=DEVELOPER_KEY
@@ -29,7 +29,7 @@ def get_video_details(video_id):
     return video_title, video_published_at
 
 
-def search_videos(query, max_results=10, published_after=None, published_before=None, region_code="PH"):
+def search_videos(query, max_results, published_after=None, published_before=None, region_code="PH"):
     """Search for videos based on a query and date range and get comment count."""
 
     request = youtube.search().list(
@@ -172,56 +172,62 @@ def getcomments(video, max_comments=99):
         return None  # No comments found, return None
 
 def gather_comments_op():
-    query = "Senatorial Election"
-    published_after = "2025-01-01T00:00:00Z"
+    published_after = "2024-12-01T00:00:00Z"
     published_before = "2025-01-15T23:59:59Z"
 
-    all_data = []
+    all_videos_data = []
+    all_comments_data = pd.DataFrame()
 
-    videos = search_videos(query, max_results=6, published_after=published_after, published_before=published_before)
-    print("Videos Found:")
-    for video in videos:
-        print(f"{video['title']} (ID: {video['video_id']}) Published At: {video['upload_date']}")
-        print(video.keys())
+    queries = [{'Kiko Pangilinan': 'C', 'Benhur Abalos': 'A', 'Abby Binay': 'A', 'Pia Cayetano': 'A', 'Panfilo Lacson': 'A',
+                'Lito lapit': 'A', 'Imee Marcos': 'A', 'Manny Pacquiao': 'A', 'Bong Revilla': 'A', 'Tito Sotto': 'A', 'Francis Tolentino': 'A',
+                'Erwin Tulfo': 'A', 'Camille Villar': 'A'}]
 
-        video_dict = {
-            "video_id": video['video_id'],
-            "title": video['title'],
-            "description": video['description'],
-            "upload_date": video['upload_date'],
-            "channel_id": video['channel_id'],
-            "comment_count": video['comment_count']
-        }
-        all_data.append(video_dict)
+    all_videos_data = []  # Initialize the list to store video data
 
-    df_video = pd.DataFrame(all_data)
-    df_merge = pd.DataFrame()
+    published_after = "2024-12-01T00:00:00Z"
+    published_before = "2025-01-15T23:59:59Z"
 
-    # Fetch comments for each video
-    for video in videos:
-        print(f"\nFetching comments for video: {video['title']} ({video['video_id']})")
-        comments_df = getcomments(video, max_comments=20)  # Fetch 20 comments per video
-        if comments_df is not None:  # Only merge if comments are found
-            df_merge = pd.concat([df_merge, comments_df], ignore_index=True)  # Append new comments
+    for query_dict in queries:
+        # Extract the key (query term) and value (custom label)
+        for query_term, label in query_dict.items():
+            print(f"\nProcessing query: {query_term}")
+            videos = search_videos(query_term, max_results=5, published_after=published_after,
+                                   published_before=published_before)
+            print("Videos Found:")
+            for video in videos:
+                print(f"{video['title']} (ID: {video['video_id']}) Published At: {video['upload_date']}")
 
-            df_merge['updated_at'] = pd.to_datetime(df_merge['updated_at'])
+                # Add the label as part of the video data
+                video_dict = {
+                    "video_id": video['video_id'],
+                    "title": video['title'],
+                    "description": video['description'],
+                    "upload_date": video['upload_date'],
+                    "channel_id": video['channel_id'],
+                    "comment_count": video['comment_count'],
+                    "label": label  # Add the custom label from the query dictionary
+                }
+                all_videos_data.append(video_dict)
 
-            # Extract the month from the datetime column
-            df_merge['month'] = df_merge['updated_at'].dt.month
-            df_merge['day'] = df_merge['updated_at'].dt.day
-            df_merge['year'] = df_merge['updated_at'].dt.year
+            # Fetch comments for each video
+            print(f"\nFetching comments for video: {video['title']} ({video['video_id']})")
+            comments_df = getcomments(video, max_comments=20)
+            if comments_df is not None:  # Only merge if comments are found
+                all_comments_data = pd.concat([all_comments_data, comments_df], ignore_index=True)
 
-            df_merge['date_id'] = df_merge['updated_at'].dt.strftime('%m%d%Y')
+    # Prepare video DataFrame
+    video_df = pd.DataFrame(all_videos_data).drop_duplicates()
 
-            print(df_merge.keys())
+    # Prepare author and comment DataFrames if comments exist
+    if not all_comments_data.empty:
+        all_comments_data['updated_at'] = pd.to_datetime(all_comments_data['updated_at'])
+        all_comments_data['month'] = all_comments_data['updated_at'].dt.month
+        all_comments_data['day'] = all_comments_data['updated_at'].dt.day
+        all_comments_data['year'] = all_comments_data['updated_at'].dt.year
+        all_comments_data['date_id'] = all_comments_data['updated_at'].dt.strftime('%m%d%Y')
 
-    # Prepare dataframes for insertion
-    video_df = df_video[['video_id', 'title', 'description', 'upload_date', 'channel_id', 'comment_count']].drop_duplicates()
-
-    # Only include rows where comments exist
-    if not df_merge.empty:
-        author_df = df_merge[['author_name', 'author_id']]
-        comment_df = df_merge[['comment_text', 'like_count', 'date_id', 'video_id', 'author_id']]
+        author_df = all_comments_data[['author_name', 'author_id']].drop_duplicates()
+        comment_df = all_comments_data[['comment_text', 'like_count', 'date_id', 'video_id', 'author_id']].drop_duplicates()
     else:
         author_df = pd.DataFrame()  # Empty DataFrame if no comments
         comment_df = pd.DataFrame()  # Empty DataFrame if no comments

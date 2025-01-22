@@ -18,6 +18,7 @@ def init_db():
                             description VARCHAR(255),
                             comment_count INT,
                             upload_date DATE,
+                            label char(1),
                             channel_id VARCHAR(25));"""
 
     create_author_table = """CREATE TABLE IF NOT EXISTS author (
@@ -49,7 +50,6 @@ def init_db():
         cur.execute(create_video_table)
         cur.execute(create_author_table)
         cur.execute(create_comment_table)
-        #cur.execute(create_sequence_comment_id)
         cur.execute(insert_code(date_df, 'date'))
         cur.execute(create_dummy_date)
         conn.commit()
