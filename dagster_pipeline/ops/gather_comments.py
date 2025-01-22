@@ -3,9 +3,7 @@ import pandas as pd
 from dotenv import load_dotenv
 import os
 from text_utils import get_translation
-from database_utils import connection_postgres, insert_code, create_date_dimension
-from init_db import init_db
-from datetime import datetime
+from database_utils import connection_postgres, insert_code
 
 load_dotenv()
 
@@ -70,7 +68,7 @@ def search_videos(query, max_results, published_after=None, published_before=Non
             "upload_date": upload_date,
             "channel_id": channel_id,
             "description": description,
-            "comment_count": comment_count  # Add the comment count to the video data
+            "comment_count": comment_count
         })
 
     return videos
@@ -92,7 +90,7 @@ def getcomments(video, max_comments=99):
 
         if total_comments == 0:
             print(f"No comments for video {video['video_id']}. Skipping comment collection.")
-            return None  # Return None if no comments are found
+            return None
 
         request = youtube.commentThreads().list(
             part="snippet",
@@ -170,13 +168,9 @@ def getcomments(video, max_comments=99):
         )
         return df2
     else:
-        return None  # No comments found, return None
+        return None
 
 def gather_comments_op():
-    published_after = "2024-12-01T00:00:00Z"
-    published_before = "2025-01-15T23:59:59Z"
-
-    all_videos_data = []
     all_comments_data = pd.DataFrame()
 
     queries = [{'Kiko Pangilinan': 'C', 'Benhur Abalos': 'A', 'Abby Binay': 'A', 'Pia Cayetano': 'A', 'Panfilo Lacson': 'A',
@@ -185,13 +179,12 @@ def gather_comments_op():
 
     queries = [{'Pia Cayetano': 'A', 'Lito Lapid':'A'}]
 
-    all_videos_data = []  # Initialize the list to store video data
+    all_videos_data = []
 
     published_after = "2024-12-01T00:00:00Z"
     published_before = "2025-01-15T23:59:59Z"
 
     for query_dict in queries:
-        # Extract the key (query term) and value (custom label)
         for query_term, label in query_dict.items():
             print(f"\nProcessing query: {query_term}")
             videos = search_videos(query_term, max_results=5, published_after=published_after,
@@ -200,7 +193,6 @@ def gather_comments_op():
             for video in videos:
                 print(f"{video['title']} (ID: {video['video_id']}) Published At: {video['upload_date']}")
 
-                # Add the label as part of the video data
                 video_dict = {
                     "video_id": video['video_id'],
                     "title": video['title'],
@@ -208,17 +200,17 @@ def gather_comments_op():
                     "upload_date": video['upload_date'],
                     "channel_id": video['channel_id'],
                     "comment_count": video['comment_count'],
-                    "label": label  # Add the custom label from the query dictionary
+                    "label": label
                 }
                 all_videos_data.append(video_dict)
 
                 # Fetch comments for each video
                 print(f"\nFetching comments for video: {video['title']} ({video['video_id']})")
                 comments_df = getcomments(video, max_comments=100)
-                if comments_df is not None:  # Only merge if comments are found
+
+                if comments_df is not None:
                     all_comments_data = pd.concat([all_comments_data, comments_df], ignore_index=True)
 
-    # Prepare video DataFrame
     video_df = pd.DataFrame(all_videos_data).drop_duplicates()
 
     # Prepare author and comment DataFrames if comments exist
@@ -235,8 +227,8 @@ def gather_comments_op():
 
         comment_df = all_comments_data[['comment_text','translated_comment_text', 'like_count', 'date_id', 'video_id', 'author_id']].drop_duplicates()
     else:
-        author_df = pd.DataFrame()  # Empty DataFrame if no comments
-        comment_df = pd.DataFrame()  # Empty DataFrame if no comments
+        author_df = pd.DataFrame()
+        comment_df = pd.DataFrame()
 
     return video_df, author_df, comment_df
 
