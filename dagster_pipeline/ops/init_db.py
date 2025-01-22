@@ -19,6 +19,7 @@ def init_db():
                             comment_count INT,
                             upload_date DATE,
                             label char(1),
+                            search_query VARCHAR(100),
                             channel_id VARCHAR(25));"""
 
     create_author_table = """CREATE TABLE IF NOT EXISTS author (

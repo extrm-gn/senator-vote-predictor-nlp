@@ -1,0 +1,35 @@
+import psycopg2
+import pandas as pd
+from database_utils import connection_postgres
+
+
+def export_table_to_csv(table_name, file_path):
+
+    db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
+
+    try:
+        # Execute the query to fetch all rows from the specified table
+        query = f"SELECT * FROM {table_name}"
+        cur.execute(query)
+        rows = cur.fetchall()
+
+        # Get column names from the cursor
+        columns = [desc[0] for desc in cur.description]
+
+        # Convert the rows and column names into a DataFrame
+        df = pd.DataFrame(rows, columns=columns)
+
+        # Export to CSV
+        df.to_csv(file_path, index=False)
+        print(f"Table {table_name} exported to {file_path}")
+
+    except Exception as e:
+        print(f"Error exporting table: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+
+# Example Usage
+if __name__ == "__main__":
+    export_table_to_csv('comment', 'output.csv')

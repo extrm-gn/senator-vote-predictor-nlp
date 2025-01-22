@@ -200,7 +200,8 @@ def gather_comments_op():
                     "upload_date": video['upload_date'],
                     "channel_id": video['channel_id'],
                     "comment_count": video['comment_count'],
-                    "label": label
+                    "label": label,
+                    "search_query": query_term
                 }
                 all_videos_data.append(video_dict)
 
