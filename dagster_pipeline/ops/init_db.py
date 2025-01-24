@@ -17,10 +17,11 @@ def init_db():
                             title VARCHAR(255),
                             description VARCHAR(255),
                             comment_count INT,
-                            upload_date DATE,
+                            date_id INT,
                             label char(1),
                             search_query VARCHAR(100),
-                            channel_id VARCHAR(25));"""
+                            channel_id VARCHAR(25),
+                            FOREIGN KEY (date_id) REFERENCES date(date_id));"""
 
     create_author_table = """CREATE TABLE IF NOT EXISTS author (
                              author_id VARCHAR(25) PRIMARY KEY,
