@@ -214,6 +214,11 @@ def gather_comments_op():
 
     video_df = pd.DataFrame(all_videos_data).drop_duplicates()
 
+    video_df['upload_date'] = pd.to_datetime(video_df['upload_date'])
+    video_df['date_id'] = video_df['upload_date'].dt.strftime('%m%d%Y')
+
+    video_df.drop(columns=['upload_date'], inplace=True)
+
     # Prepare author and comment DataFrames if comments exist
     if not all_comments_data.empty:
         all_comments_data['updated_at'] = pd.to_datetime(all_comments_data['updated_at'])
