@@ -22,7 +22,6 @@ def init_db():
                             search_query VARCHAR(100),
                             channel_id VARCHAR(25),
                             training_id INT DEFAULT NULL,  
-                            in_training VARCHAR(10),
                             FOREIGN KEY (date_id) REFERENCES date(date_id));"""
 
     create_author_table = """CREATE TABLE IF NOT EXISTS author (
