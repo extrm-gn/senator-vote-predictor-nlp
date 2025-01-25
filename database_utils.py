@@ -86,6 +86,9 @@ def insert_code(df, table_name):
 def insert_training_metadata(list_of_table, model_name):
     db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
 
+    video_ids = list_of_table.split(sep=',')
+    formatted_video_ids = ', '.join([f"'{video_id.strip()}'" for video_id in video_ids])
+
     query = "SELECT * FROM training_metadata WHERE status = 'active'"
     cur.execute(query)
     rows = cur.fetchall()
@@ -94,18 +97,29 @@ def insert_training_metadata(list_of_table, model_name):
         print("No active rows found.")
     else:
         print(f"Found {len(rows)} active rows.")
-        update_command = """UPDATE training_metadata SET status = 'inactive' WHERE status = 'active'"""
+        update_status_command = """UPDATE training_metadata SET status = 'inactive' WHERE status = 'active'"""
 
-        cur.execute(update_command)
+        cur.execute(update_status_command)
         conn.commit()
 
     train_data = [{'video_ids': list_of_table, 'model_name': model_name, 'status': 'active', 'training_date': datetime.now()}]
     df = pd.DataFrame(train_data)
 
-    sql_command = insert_code(df, 'training_metadata')
-    cur.execute(sql_command)
-
+    insert_sql_command = f"""INSERT INTO training_metadata (video_ids, model_name, status, training_date) VALUES('{list_of_table}', '{model_name}', 'active', '{datetime.now()}');"""
+    print(insert_sql_command)
+    cur.execute(insert_sql_command)
     conn.commit()
+
+    update_video_command = f"""UPDATE video
+                                SET training_id = (SELECT training_id FROM training_metadata WHERE status = 'active' ORDER BY training_date DESC LIMIT 1)
+                                WHERE video_id IN ({formatted_video_ids});"""
+
+    cur.execute(update_video_command)
+    conn.commit()
+
+    print(insert_sql_command)
+    print(update_video_command)
+
     cur.close()
     conn.close()
 
@@ -127,3 +141,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # insert_training_metadata("pXwjCz_k2cw", "trial_model_name")
