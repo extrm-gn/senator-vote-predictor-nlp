@@ -86,6 +86,19 @@ def insert_code(df, table_name):
 def insert_training_metadata(list_of_table, model_name):
     db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
 
+    query = "SELECT * FROM training_metadata WHERE status = 'active'"
+    cur.execute(query)
+    rows = cur.fetchall()
+
+    if not rows:
+        print("No active rows found.")
+    else:
+        print(f"Found {len(rows)} active rows.")
+        update_command = """UPDATE training_metadata SET status = 'inactive' WHERE status = 'active'"""
+
+        cur.execute(update_command)
+        conn.commit()
+
     train_data = [{'video_ids': list_of_table, 'model_name': model_name, 'status': 'active', 'training_date': datetime.now()}]
     df = pd.DataFrame(train_data)
 
