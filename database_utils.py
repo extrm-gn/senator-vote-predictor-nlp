@@ -82,6 +82,21 @@ def insert_code(df, table_name):
     return sql_script
 
 
+#create function that would insert in training_metadata and update video table in training_id
+def insert_training_metadata(list_of_table, model_name):
+    db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
+
+    train_data = [{'video_ids': list_of_table, 'model_name': model_name, 'status': 'active', 'training_date': datetime.now()}]
+    df = pd.DataFrame(train_data)
+
+    sql_command = insert_code(df, 'training_metadata')
+    cur.execute(sql_command)
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
 def main():
     conn = None
     try:
