@@ -21,6 +21,8 @@ def init_db():
                             label char(1),
                             search_query VARCHAR(100),
                             channel_id VARCHAR(25),
+                            training_id INT DEFAULT NULL,  
+                            in_training VARCHAR(10),
                             FOREIGN KEY (date_id) REFERENCES date(date_id));"""
 
     create_author_table = """CREATE TABLE IF NOT EXISTS author (
@@ -40,6 +42,13 @@ def init_db():
                               FOREIGN KEY(date_id) REFERENCES date(date_id),
                               UNIQUE (video_id, author_id, comment_text));"""
 
+    create_training_table = """CREATE TABLE training_metadata (
+                               training_id SERIAL PRIMARY KEY,
+                               model_name VARCHAR(255),
+                               training_date TIMESTAMP,
+                               video_ids TEXT,
+                               status VARCHAR(10));"""
+
     create_sequence_comment_id = """CREATE SEQUENCE comment_id_seq START 1;"""
     create_dummy_date = """INSERT INTO date (date_id, month, day, year)
                             VALUES (12312099, 12, 31, 2099);"""
@@ -53,6 +62,7 @@ def init_db():
         cur.execute(create_video_table)
         cur.execute(create_author_table)
         cur.execute(create_comment_table)
+        cur.execute(create_training_table)
 
         cur.execute("SELECT COUNT(*) FROM Date")
         date_count = cur.fetchone()[0]
