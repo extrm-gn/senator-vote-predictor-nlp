@@ -102,9 +102,6 @@ def insert_training_metadata(list_of_table, model_name):
         cur.execute(update_status_command)
         conn.commit()
 
-    train_data = [{'video_ids': list_of_table, 'model_name': model_name, 'status': 'active', 'training_date': datetime.now()}]
-    df = pd.DataFrame(train_data)
-
     insert_sql_command = f"""INSERT INTO training_metadata (video_ids, model_name, status, training_date) VALUES('{list_of_table}', '{model_name}', 'active', '{datetime.now()}');"""
     print(insert_sql_command)
     cur.execute(insert_sql_command)
@@ -116,9 +113,6 @@ def insert_training_metadata(list_of_table, model_name):
 
     cur.execute(update_video_command)
     conn.commit()
-
-    print(insert_sql_command)
-    print(update_video_command)
 
     cur.close()
     conn.close()
