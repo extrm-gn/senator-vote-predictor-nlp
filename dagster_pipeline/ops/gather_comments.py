@@ -3,6 +3,7 @@ import pandas as pd
 from dotenv import load_dotenv
 import os, time
 from text_utils import get_translation
+from datetime import datetime, timedelta
 from database_utils import connection_postgres, insert_code
 
 load_dotenv()
@@ -170,6 +171,45 @@ def getcomments(video, max_comments=99):
     else:
         return None
 
+
+def get_published_date_range():
+    # Establish database connection
+    db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
+
+    # Query to get the latest date
+    query = """
+        SELECT day, month, year 
+        FROM video 
+        JOIN date ON video.date_id = date.date_id 
+        ORDER BY year DESC, month DESC, day DESC 
+        LIMIT 1
+    """
+    cur.execute(query)
+    latest_date = cur.fetchone()
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    if latest_date:
+        # Extract day, month, year and create a datetime object
+        day, month, year = latest_date
+        latest_datetime = datetime(year, month, day)
+
+        published_after = (latest_datetime + timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+        # Ensure that published_before doesn't exceed today
+        published_before = min((latest_datetime + timedelta(weeks=1)).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                               datetime.today().strftime('%Y-%m-%dT%H:%M:%SZ'))
+
+        return published_after, published_before
+    else:
+        published_after = "2024-10-01T00:00:00Z"
+        published_before = "2024-10-06T00:00:00Z"
+
+        return published_after, published_before
+
+
 def gather_comments_op():
     all_comments_data = pd.DataFrame()
 
@@ -185,12 +225,18 @@ def gather_comments_op():
                 'Lito lapid': 'A', 'Imee Marcos': 'A', 'Manny Pacquiao': 'A', 'Bong Revilla': 'A', 'Tito Sotto': 'A', 'Francis Tolentino': 'A',
                 'Erwin Tulfo': 'A', 'Camille Villar': 'A'}]
 
-    queries = [{'Pia Cayetano': 'A', 'Lito Lapid':'A'}]
+    queries = [{'Pia Cayetano': 'A', 'Imee Marcos':'A'}]
 
     all_videos_data = []
 
-    published_after = "2024-12-01T00:00:00Z"
-    published_before = "2025-01-15T23:59:59Z"
+    query = "SELECT day, month, year FROM video join date on video.date_id=date.date_id order by year desc, month desc, day desc LIMIT 1"
+    cur.execute(query)
+    latest_date = cur.fetchall()
+
+    published_after, published_before = get_published_date_range()
+
+    # published_after = "2024-12-01T00:00:00Z"
+    # published_before = "2025-01-15T23:59:59Z"
 
     for query_dict in queries:
         for query_term, label in query_dict.items():
