@@ -103,7 +103,7 @@ def insert_training_metadata(list_of_table, model_name):
         conn.commit()
 
     insert_sql_command = f"""INSERT INTO training_metadata (video_ids, model_name, status, training_date) VALUES('{list_of_table}', '{model_name}', 'active', '{datetime.now()}');"""
-    print(insert_sql_command)
+
     cur.execute(insert_sql_command)
     conn.commit()
 

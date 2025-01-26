@@ -1,7 +1,7 @@
 import googleapiclient.discovery
 import pandas as pd
 from dotenv import load_dotenv
-import os
+import os, time
 from text_utils import get_translation
 from database_utils import connection_postgres, insert_code
 
@@ -173,6 +173,14 @@ def getcomments(video, max_comments=99):
 def gather_comments_op():
     all_comments_data = pd.DataFrame()
 
+    db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
+
+    query = "SELECT video_id FROM video"
+    cur.execute(query)
+    rows = cur.fetchall()
+
+    existing_video_ids = [row[0] for row in rows]
+
     queries = [{'Kiko Pangilinan': 'C', 'Benhur Abalos': 'A', 'Abby Binay': 'A', 'Pia Cayetano': 'A', 'Panfilo Lacson': 'A',
                 'Lito lapid': 'A', 'Imee Marcos': 'A', 'Manny Pacquiao': 'A', 'Bong Revilla': 'A', 'Tito Sotto': 'A', 'Francis Tolentino': 'A',
                 'Erwin Tulfo': 'A', 'Camille Villar': 'A'}]
@@ -228,8 +236,12 @@ def gather_comments_op():
         all_comments_data['date_id'] = all_comments_data['updated_at'].dt.strftime('%m%d%Y')
 
         author_df = all_comments_data[['author_name', 'author_id']].drop_duplicates()
-        all_comments_data['translated_comment_text'] = all_comments_data['comment_text'].apply(
-            lambda x: get_translation(x))
+
+        all_comments_data['translated_comment_text'] = all_comments_data.apply(
+            lambda row: 'repeated comment' if row['video_id'] in existing_video_ids else get_translation(
+                row['comment_text']),
+            axis=1
+        )
 
         comment_df = all_comments_data[['comment_text','translated_comment_text', 'like_count', 'date_id', 'video_id', 'author_id']].drop_duplicates()
     else:
@@ -241,6 +253,15 @@ def gather_comments_op():
 def insert_comments_op(video_df, author_df, comment_df):
     db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
 
+    query = "SELECT video_id FROM video"
+    cur.execute(query)
+    rows = cur.fetchall()
+
+    existing_video_ids = [row[0] for row in rows]
+
+    # Filter out rows in comment_df with video_id already in the video table
+    filtered_comment_df = comment_df[~comment_df['video_id'].isin(existing_video_ids)]
+
     if not video_df.empty:
         video_sql_command = insert_code(video_df, "video")
         cur.execute(video_sql_command)
@@ -249,8 +270,8 @@ def insert_comments_op(video_df, author_df, comment_df):
         author_sql_command = insert_code(author_df, "author")
         cur.execute(author_sql_command)
 
-    if not comment_df.empty:
-        comment_sql_command = insert_code(comment_df, "comment")
+    if not filtered_comment_df.empty:
+        comment_sql_command = insert_code(filtered_comment_df, "comment")
         cur.execute(comment_sql_command)
 
     conn.commit()
@@ -259,5 +280,13 @@ def insert_comments_op(video_df, author_df, comment_df):
     conn.close()
 
 if __name__ == "__main__":
+    start_time = time.time()
+
     video_df, author_df, comment_df = gather_comments_op()
     insert_comments_op(video_df, author_df, comment_df)
+
+    end_time = time.time()
+
+    # Calculate elapsed time
+    elapsed_time = end_time - start_time
+    print(f"Filtering comments took {elapsed_time:.2f} seconds.")
