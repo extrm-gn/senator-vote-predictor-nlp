@@ -10,7 +10,7 @@ load_dotenv()
 
 api_service_name = "youtube"
 api_version = "v3"
-DEVELOPER_KEY = os.getenv('YT3_API_KEY')
+DEVELOPER_KEY = os.getenv('YT_API_KEY')
 
 youtube = googleapiclient.discovery.build(
     api_service_name, api_version, developerKey=DEVELOPER_KEY
@@ -235,8 +235,8 @@ def gather_comments_op():
 
     published_after, published_before = get_published_date_range()
 
-    # published_after = "2024-12-01T00:00:00Z"
-    # published_before = "2025-01-15T23:59:59Z"
+    # published_after = "2024-01-21T00:00:00Z"
+    # published_before = "2025-01-25T23:59:59Z"
 
     for query_dict in queries:
         for query_term, label in query_dict.items():
