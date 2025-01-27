@@ -284,13 +284,13 @@ def gather_comments_op():
 
         author_df = all_comments_data[['author_name', 'author_id']].drop_duplicates()
 
-        all_comments_data['translated_comment_text'] = all_comments_data.apply(
-            lambda row: 'repeated comment' if row['video_id'] in existing_video_ids else get_translation(
-                row['comment_text']),
-            axis=1
-        )
+        # all_comments_data['translated_comment_text'] = all_comments_data.apply(
+        #     lambda row: 'repeated comment' if row['video_id'] in existing_video_ids else get_translation(
+        #         row['comment_text']),
+        #     axis=1
+        # )
 
-        comment_df = all_comments_data[['comment_text','translated_comment_text', 'like_count', 'date_id', 'video_id', 'author_id']].drop_duplicates()
+        comment_df = all_comments_data[['comment_text', 'like_count', 'date_id', 'video_id', 'author_id']].drop_duplicates()
     else:
         author_df = pd.DataFrame()
         comment_df = pd.DataFrame()
