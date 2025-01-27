@@ -56,7 +56,7 @@ def insert_code(df, table_name):
     for index, row in df.iterrows():
         # Escape single quotes in string values
         values = [
-            f"'{str(value).replace("'", "''")}'" if isinstance(value, str) else str(value)
+            "'" + str(value).replace("'", "''") + "'" if isinstance(value, str) else str(value)
             for value in row
         ]
 

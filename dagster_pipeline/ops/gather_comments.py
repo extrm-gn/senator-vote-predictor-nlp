@@ -223,9 +223,10 @@ def gather_comments_op():
 
     queries = [{'Kiko Pangilinan': 'C', 'Benhur Abalos': 'A', 'Abby Binay': 'A', 'Pia Cayetano': 'A', 'Panfilo Lacson': 'A',
                 'Lito lapid': 'A', 'Imee Marcos': 'A', 'Manny Pacquiao': 'A', 'Bong Revilla': 'A', 'Tito Sotto': 'A', 'Francis Tolentino': 'A',
-                'Erwin Tulfo': 'A', 'Camille Villar': 'A'}]
+                'Erwin Tulfo': 'A', 'Camille Villar': 'A', 'Bam Aquino': 'C', 'Jimmy Bondoc': 'B', 'Teddy Casino': 'C', 'France Castro':'C',
+                'Bato Dela Rosa': 'B', 'Bong Go': 'B', 'Willie Ong': 'A', 'Willie Revillame': 'A', 'Ben Tulfo': 'A'}]
 
-    queries = [{'Pia Cayetano': 'A', 'Imee Marcos':'A'}]
+    # queries = [{'Pia Cayetano': 'A', 'Imee Marcos':'A'}]
 
     all_videos_data = []
 
@@ -261,7 +262,7 @@ def gather_comments_op():
 
                 # Fetch comments for each video
                 print(f"\nFetching comments for video: {video['title']} ({video['video_id']})")
-                comments_df = getcomments(video, max_comments=100)
+                comments_df = getcomments(video, max_comments=25)
 
                 if comments_df is not None:
                     all_comments_data = pd.concat([all_comments_data, comments_df], ignore_index=True)
