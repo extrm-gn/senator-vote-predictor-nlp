@@ -296,7 +296,8 @@ def gather_comments_op():
         author_df = pd.DataFrame()
         comment_df = pd.DataFrame()
 
-    return video_df, author_df, comment_df
+    insert_comments_op(video_df, author_df, comment_df)
+
 
 def insert_comments_op(video_df, author_df, comment_df):
     db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
@@ -328,13 +329,4 @@ def insert_comments_op(video_df, author_df, comment_df):
     conn.close()
 
 if __name__ == "__main__":
-    start_time = time.time()
-
-    video_df, author_df, comment_df = gather_comments_op()
-    insert_comments_op(video_df, author_df, comment_df)
-
-    end_time = time.time()
-
-    # Calculate elapsed time
-    elapsed_time = end_time - start_time
-    print(f"Filtering comments took {elapsed_time:.2f} seconds.")
+    gather_comments_op()
