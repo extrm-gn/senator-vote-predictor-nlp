@@ -2,7 +2,7 @@ import psycopg2
 from database_utils import create_date_dimension, connection_postgres, insert_code
 from dagster import op
 
-
+@op
 def init_db():
     #TODO: create necessary tables such as the date, video, author, and comment table
 

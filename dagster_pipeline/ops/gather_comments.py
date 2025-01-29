@@ -210,7 +210,7 @@ def get_published_date_range():
 
         return published_after, published_before
 
-
+@op
 def gather_comments_op():
     all_comments_data = pd.DataFrame()
 

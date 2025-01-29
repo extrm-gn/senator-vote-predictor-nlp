@@ -3,7 +3,7 @@ from text_utils import get_translation
 from database_utils import connection_postgres
 from dagster import op
 
-
+@op
 def translate_text():
     """Fetch untranslated comments, translate them, and update the database."""
 
