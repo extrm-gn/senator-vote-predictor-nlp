@@ -5,6 +5,7 @@ import os, time
 from text_utils import get_translation
 from datetime import datetime, timedelta
 from database_utils import connection_postgres, insert_code
+from dagster import op
 
 load_dotenv()
 

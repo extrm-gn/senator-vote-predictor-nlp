@@ -1,5 +1,4 @@
 import requests
-from tenacity import retry, stop_after_attempt, wait_fixed
 import time
 
 def get_translation(text, target_language="en", pause_duration=0):
