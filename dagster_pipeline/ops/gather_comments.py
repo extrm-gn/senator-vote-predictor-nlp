@@ -10,7 +10,7 @@ load_dotenv()
 
 api_service_name = "youtube"
 api_version = "v3"
-DEVELOPER_KEY = os.getenv('YT_API_KEY')
+DEVELOPER_KEY = os.getenv('YT2_API_KEY')
 
 youtube = googleapiclient.discovery.build(
     api_service_name, api_version, developerKey=DEVELOPER_KEY
@@ -242,7 +242,7 @@ def gather_comments_op():
     for query_dict in queries:
         for query_term, label in query_dict.items():
             print(f"\nProcessing query: {query_term}")
-            videos = search_videos(query_term, max_results=5, published_after=published_after,
+            videos = search_videos(query_term, max_results=50, published_after=published_after,
                                    published_before=published_before)
             print("Videos Found:")
             for video in videos:

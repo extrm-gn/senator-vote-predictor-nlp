@@ -10,7 +10,7 @@ def export_table_to_csv(table_name, file_path):
     try:
         # Execute the query to fetch all rows from the specified table
         query = f"SELECT * FROM {table_name}"
-        query = "SELECT comment_id, translated_comment_text, like_count, search_query, label FROM comment JOIN video ON comment.video_id=video.video_id"
+        query = "SELECT comment_id, translated_comment_text, like_count, search_query, label FROM comment JOIN video ON comment.video_id=video.video_id WHERE translated_comment_text IS NOT NULL"
         cur.execute(query)
         rows = cur.fetchall()
 

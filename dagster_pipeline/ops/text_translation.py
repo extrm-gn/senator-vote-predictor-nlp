@@ -7,7 +7,7 @@ def translate_text():
     db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
 
     try:
-        query = "SELECT comment_id, comment_text FROM comment WHERE translated_comment_text IS NULL;"
+        query = "SELECT comment_id, comment_text FROM comment JOIN date ON(comment.date_id=date.date_id) WHERE translated_comment_text IS NULL ORDER BY year ASC, month ASC, day ASC LIMIT 10;"
         cur.execute(query)
 
         results = cur.fetchall()
@@ -26,9 +26,9 @@ def translate_text():
             update_query = f"""
                     UPDATE comment
                     SET translated_comment_text = %s
-                    WHERE id = %s;
+                    WHERE comment_id = %s;
                 """
-            cur.execute(update_query, (row['translated_comment_text'], row['id']))
+            cur.execute(update_query, (row['translated_comment_text'], row['comment_id']))
 
         conn.commit()
         print("Translated comments updated successfully.")
@@ -38,4 +38,21 @@ def translate_text():
         cur.close()
         conn.close()
 
-translate_text()
+if __name__ == '__main__':
+    db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
+
+    query = "SELECT comment_id, comment_text FROM comment JOIN date ON(comment.date_id=date.date_id) WHERE translated_comment_text IS NULL ORDER BY year ASC, month ASC, day ASC LIMIT 50;"
+    cur.execute(query)
+    conn.commit()
+
+    results = cur.fetchall()
+
+    while True:
+        if not results:
+            print("no more text to translate")
+            break
+
+        translate_text()
+
+    cur.close()
+    conn.close()

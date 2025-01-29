@@ -1,24 +1,26 @@
 import requests
+from tenacity import retry, stop_after_attempt, wait_fixed
+import time
 
-
-def get_translation(text, target_language="en"):
+def get_translation(text, target_language="en", pause_duration=0):
     # Make the API request
     url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={target_language}&dt=t&q={text}"
     response = requests.get(url)
 
     # Check if the response status is OK
-    if response.status_code != 200:
-        return f"Error: Unable to fetch translation (Status code: {response.status_code})"
+    timeout = 1  # seconds
 
-    try:
-        # Parse the JSON response
-        data = response.json()
+    # Send the GET request
+    response = requests.get(url, timeout=timeout)
+    time.sleep(pause_duration)
 
-        # Extract translated text from the first sentence
-        translated_text = data[0][0][0]  # Translation
-
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Parse the response JSON data
+        translation_data = response.json()
+        translated_text = translation_data[0][0][0]
+        print(f"{text} *** {translated_text}")
         return translated_text
-
-    except (ValueError, IndexError, TypeError) as e:
-        return f"Error processing response: {e}"
+    else:
+        raise Exception(f"Error: Unable to fetch translation. Status code: {response.status_code}")
 
