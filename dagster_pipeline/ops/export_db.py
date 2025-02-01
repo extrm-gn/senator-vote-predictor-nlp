@@ -4,10 +4,11 @@ from database_utils import connection_postgres
 from dagster import op
 
 @op
-def export_table_to_csv(table_name, file_path):
+def export_table_to_csv():
 
     db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
-
+    table_name = "comment"
+    file_path = "output.csv"
     try:
         # Execute the query to fetch all rows from the specified table
         query = f"SELECT * FROM {table_name}"
@@ -35,4 +36,4 @@ def export_table_to_csv(table_name, file_path):
 
 # Example Usage
 if __name__ == "__main__":
-    export_table_to_csv('comment', 'output.csv')
+    export_table_to_csv()

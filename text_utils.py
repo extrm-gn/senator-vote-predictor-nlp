@@ -1,7 +1,7 @@
 import requests
 import time
 
-def get_translation(text, target_language="en", pause_duration=0):
+def get_translation(text, target_language="en", pause_duration=0.10):
     # Make the API request
     url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={target_language}&dt=t&q={text}"
     response = requests.get(url)

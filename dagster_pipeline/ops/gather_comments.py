@@ -11,7 +11,7 @@ load_dotenv()
 
 api_service_name = "youtube"
 api_version = "v3"
-DEVELOPER_KEY = os.getenv('YT2_API_KEY')
+DEVELOPER_KEY = os.getenv('YT_API_KEY')
 
 youtube = googleapiclient.discovery.build(
     api_service_name, api_version, developerKey=DEVELOPER_KEY
@@ -227,7 +227,7 @@ def gather_comments_op():
                 'Erwin Tulfo': 'A', 'Camille Villar': 'A', 'Bam Aquino': 'C', 'Jimmy Bondoc': 'B', 'Teddy Casino': 'C', 'France Castro':'C',
                 'Bato Dela Rosa': 'B', 'Bong Go': 'B', 'Willie Ong': 'A', 'Willie Revillame': 'A', 'Ben Tulfo': 'A'}]
 
-    # queries = [{'Pia Cayetano': 'A', 'Imee Marcos':'A'}]
+    queries = [{'Philippines senatorial candidates 2025': 'D'}]
 
     all_videos_data = []
 
@@ -243,7 +243,7 @@ def gather_comments_op():
     for query_dict in queries:
         for query_term, label in query_dict.items():
             print(f"\nProcessing query: {query_term}")
-            videos = search_videos(query_term, max_results=50, published_after=published_after,
+            videos = search_videos(query_term, max_results=5, published_after=published_after,
                                    published_before=published_before)
             print("Videos Found:")
             for video in videos:
@@ -277,7 +277,14 @@ def gather_comments_op():
 
     # Prepare author and comment DataFrames if comments exist
     if not all_comments_data.empty:
-        all_comments_data['updated_at'] = pd.to_datetime(all_comments_data['updated_at'])
+        all_comments_data['updated_at'] = all_comments_data['updated_at'].replace(["0", "NULL", ""], pd.NaT)
+
+        # Convert safely, handling errors
+        all_comments_data['updated_at'] = pd.to_datetime(all_comments_data['updated_at'], errors='coerce')
+
+        # Ensure SQL compatibility by filling NaT with a default value or removing rows
+        all_comments_data = all_comments_data.dropna(subset=['updated_at'])
+
         all_comments_data['month'] = all_comments_data['updated_at'].dt.month
         all_comments_data['day'] = all_comments_data['updated_at'].dt.day
         all_comments_data['year'] = all_comments_data['updated_at'].dt.year
@@ -285,11 +292,11 @@ def gather_comments_op():
 
         author_df = all_comments_data[['author_name', 'author_id']].drop_duplicates()
 
-        # all_comments_data['translated_comment_text'] = all_comments_data.apply(
-        #     lambda row: 'repeated comment' if row['video_id'] in existing_video_ids else get_translation(
-        #         row['comment_text']),
-        #     axis=1
-        # )
+        all_comments_data['translated_comment_text'] = all_comments_data.apply(
+            lambda row: 'repeated comment' if row['video_id'] in existing_video_ids else get_translation(
+                row['comment_text']),
+            axis=1
+        )
 
         comment_df = all_comments_data[['comment_text', 'like_count', 'date_id', 'video_id', 'author_id']].drop_duplicates()
     else:
