@@ -1,13 +1,14 @@
+from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import numpy as np
 import spacy
 import pickle
 from textblob import TextBlob
-from flask import Flask, render_template, request, jsonify
+
+app = Flask(__name__)
 
 # Load preprocessed dataset and models
-df = pd.read_csv(
-    "C:/Users/J-CHENNY/PycharmProjects/senator-vote-predictor-nlp/dagster_pipeline/Data/processed_data.csv")
+df = pd.read_csv("C:/Users/J-CHENNY/PycharmProjects/senator-vote-predictor-nlp/dagster_pipeline/Data/processed_data.csv")
 with open("C:/Users/J-CHENNY/PycharmProjects/senator-vote-predictor-nlp/dagster_pipeline/Data/models.pkl", "rb") as f:
     models = pickle.load(f)
 
@@ -22,30 +23,29 @@ nlp = spacy.load("en_core_web_sm")
 
 # Senator mapping
 senator_mapping = {
-    0: ['Kiko Pangilinan', 'Bam Aquino'],
-    1: ['Benhur Abalos'],
-    2: ['Abby Binay'],
-    3: ['Pia Cayetano'],
-    4: ['Panfilo Lacson', 'Manny Pacquiao'],
-    5: ['Lito Lapid'],
-    6: ['Imee Marcos'],
-    7: ['Manny Pacquiao'],
-    8: ['Bong Revilla'],
-    9: ['Tito Sotto'],
-    10: ['Francis Tolentino'],
-    11: ['Erwin Tulfo'],
-    12: ['Camille Villar'],
-    13: ['Bam Aquino'],
-    14: ['Jimmy Bondoc'],
-    15: ['Teddy Casino'],
-    16: ['France Castro'],
-    17: ['Bato Dela Rosa'],
-    18: ['Bong Go'],
-    19: ['Willie Ong'],
-    20: ['Willie Revillame'],
-    21: ['Ben Tulfo'],
+    0: ['Kiko', 'Pangilinan', 'Kiko Pangilinan', 'Sen Kiko', 'Francis Pangilinan', 'Kiko P', 'Leni Robredo', 'Leni', 'Robredo'],
+    1: ['Benhur', 'Abalos', 'Benhur Abalos', 'Benjamin Abalos Jr.', 'Sec Abalos'],
+    2: ['Abby', 'Binay', 'Abby Binay', 'Abigail Binay', 'Mayor Abby', 'Mayor Binay'],
+    3: ['Pia', 'Cayetano', 'Pia Cayetano', 'Maria Pia Cayetano', 'Sen Pia'],
+    4: ['Panfilo', 'Lacson', 'Panfilo Lacson', 'Ping Lacson', 'Sen Ping', 'Gen Lacson'],
+    5: ['Lito', 'Lapid', 'Lito Lapid', 'Manuel Lapid', 'Leon Guerrero'],
+    6: ['Imee', 'Marcos', 'Imee Marcos', 'Maria Imelda Marcos', 'Sen Imee', 'Gov Imee'],
+    7: ['Manny', 'Pacquiao', 'Manny Pacquiao', 'Emmanuel Pacquiao', 'Pacman', 'Sen Pacquiao', 'Champ'],
+    8: ['Bong', 'Revilla', 'Bong Revilla', 'Ramon Revilla Jr.', 'Ramon Bong Revilla', 'Kap'],
+    9: ['Tito', 'Sotto', 'Tito Sotto', 'Vicente Sotto', 'Vicente Sotto III', 'Eat Bulaga'],
+    10: ['Francis', 'Tolentino', 'Francis Tolentino', 'Atty. Tolentino', 'Sen Tolentino'],
+    11: ['Erwin', 'Tulfo', 'Bitag', 'bitag', 'Erwin Tulfo', 'Sec Tulfo', 'Sir Erwin'],
+    12: ['Camille', 'Villar', 'Camille Villar', 'Camille Lydia Villar', 'Cong Camille'],
+    13: ['Bam', 'Aquino', 'Bam Aquino', 'Paolo Benigno Aquino IV', 'Sen Bam', 'Leni Robredo', 'Leni', 'Robredo'],
+    14: ['Jimmy', 'Bondoc', 'Jimmy Bondoc', 'James Bondoc', 'Singer Bondoc','Sara', 'Duterte', 'Sarah', 'Sara Duterte'],
+    15: ['Teddy', 'Casino', 'Teddy Casino', 'Teodoro Casino', 'Activist Teddy'],
+    16: ['France', 'Castro', 'France Castro', 'Rep Castro', 'Cong France'],
+    17: ['Bato', 'Dela Rosa', 'Bato Dela Rosa', 'Ronald Dela Rosa', 'Gen Bato', 'Sen Bato', 'Stone', 'Sara', 'Duterte', 'Sarah', 'Sara Duterte'],
+    18: ['Bong', 'Go', 'Bong Go', 'Christopher Go', 'Sen Bong', 'SAP Bong','Sara', 'Duterte', 'Sarah', 'Sara Duterte'],
+    19: ['Willie', 'Ong', 'Willie Ong', 'Dr. Willie Ong', 'Doc Willie'],
+    20: ['Willie', 'Revillame', 'Willie Revillame', 'Wilfredo Revillame', 'Kuya Wil', 'Wowowin'],
+    21: ['Ben', 'Tulfo', 'Ben Tulfo', 'Bitag Live', 'Ka Ben'],
 }
-
 
 # Function to get sentiment score
 def get_sentiment_score(text):
@@ -57,7 +57,6 @@ def get_sentiment_score(text):
         return 'Negative', sentiment
     else:
         return 'Neutral', sentiment
-
 
 # Function to predict senator
 def predict_senator(user_input_text):
@@ -118,43 +117,29 @@ def predict_senator(user_input_text):
     similarity_percentages = 100 * (1 - (distances - min_distance) / (max_distance - min_distance))
 
     # Get senator similarity scores
-    sorted_output = sorted([(senator_mapping[i], similarity_percentages[i]) for i in range(len(senator_mapping))],
-                           key=lambda x: x[1], reverse=True)
+    sorted_output = sorted([(senator_mapping[i], similarity_percentages[i]) for i in range(len(senator_mapping))], key=lambda x: x[1], reverse=True)
 
     # Get overall sentiment
     overall_sentiment_label, overall_sentiment_score = get_sentiment_score(user_input_text)
 
-    return overall_sentiment_label, overall_sentiment_score, sorted_output
+    # Prepare results
+    results = {
+        "senator_matches": [{"senator": " ".join(senator), "similarity": similarity} for senator, similarity in sorted_output[:21]],
+        "sentiment_label": overall_sentiment_label,
+        "sentiment_score": overall_sentiment_score
+    }
 
-
-# Flask routes
-app = Flask(__name__)
-
+    return results
 
 @app.route('/')
-def home():
+def index():
     return render_template('index.html')
-
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    user_input_text = request.form['user_input']
-    sentiment_label, sentiment_score, prediction = predict_senator(user_input_text)
-
-    # Prepare response data
-    response = {
-        'sentiment_label': sentiment_label,
-        'sentiment_score': sentiment_score,
-        'senator_matches': []
-    }
-
-    for senator_group, similarity in prediction[:12]:  # Top 12 senators
-        for senator in senator_group:
-            response['senator_matches'].append({'senator': senator, 'similarity': similarity})
-
-    # Return predictions as a JSON response
-    return jsonify(response)
-
+    user_input = request.form['user_input']
+    result = predict_senator(user_input)
+    return jsonify(result)
 
 if __name__ == "__main__":
     app.run(debug=True)
