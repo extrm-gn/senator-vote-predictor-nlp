@@ -2,3 +2,6 @@
 output.csv
 dagster_pipeline/Data/
 templates/
+test_gather_comments.py
+test_gather_news.py
+test_translation.py
