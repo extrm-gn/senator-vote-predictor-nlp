@@ -1,3 +1,4 @@
 .env
 output.csv
 dagster_pipeline/Data/
+templates/
