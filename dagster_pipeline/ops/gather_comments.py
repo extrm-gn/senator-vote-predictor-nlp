@@ -5,7 +5,7 @@ import os, time
 from text_utils import get_translation
 from datetime import datetime, timedelta
 from database_utils import connection_postgres, insert_code
-from dagster import op
+from dagster import asset
 
 load_dotenv()
 
@@ -210,7 +210,7 @@ def get_published_date_range():
 
         return published_after, published_before
 
-@op
+@asset
 def gather_comments_op():
     all_comments_data = pd.DataFrame()
 
