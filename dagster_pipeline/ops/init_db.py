@@ -1,8 +1,6 @@
 import psycopg2
 from database_utils import create_date_dimension, connection_postgres, insert_code
-from dagster import asset
 
-@asset
 def init_db():
     #TODO: create necessary tables such as the date, video, author, and comment table
 
@@ -63,7 +61,7 @@ def init_db():
         cur.execute(create_video_table)
         cur.execute(create_author_table)
         cur.execute(create_comment_table)
-        cur.execute(create_training_table)
+        # cur.execute(create_training_table)
 
         cur.execute("SELECT COUNT(*) FROM Date")
         date_count = cur.fetchone()[0]

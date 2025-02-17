@@ -1,9 +1,8 @@
 import pandas as pd
 from text_utils import get_translation
 from database_utils import connection_postgres
-from dagster import asset
 
-@asset
+
 def translate_text():
     db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
 

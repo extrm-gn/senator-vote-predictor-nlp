@@ -1,9 +1,8 @@
 import psycopg2
 import pandas as pd
 from database_utils import connection_postgres
-from dagster import asset
 
-@asset
+
 def export_table_to_csv():
 
     db_host, db_name, db_user, db_password, db_port, conn, cur = connection_postgres()
