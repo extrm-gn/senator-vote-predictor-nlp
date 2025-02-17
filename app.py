@@ -8,8 +8,8 @@ from textblob import TextBlob
 app = Flask(__name__)
 
 # Load preprocessed dataset and models
-df = pd.read_csv("C:/Users/J-CHENNY/PycharmProjects/senator-vote-predictor-nlp/dagster_pipeline/Data/processed_data.csv")
-with open("C:/Users/J-CHENNY/PycharmProjects/senator-vote-predictor-nlp/dagster_pipeline/Data/models.pkl", "rb") as f:
+df = pd.read_csv("/Data/processed_data.csv")
+with open("/Data/models.pkl", "rb") as f:
     models = pickle.load(f)
 
 vectorizer = models["vectorizer"]
