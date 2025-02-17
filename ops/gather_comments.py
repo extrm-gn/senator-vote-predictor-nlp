@@ -226,8 +226,8 @@ def gather_comments_op():
                 'Erwin Tulfo': 'A', 'Camille Villar': 'A', 'Bam Aquino': 'C', 'Jimmy Bondoc': 'B', 'Teddy Casino': 'C', 'France Castro':'C',
                 'Bato Dela Rosa': 'B', 'Bong Go': 'B', 'Willie Ong': 'A', 'Willie Revillame': 'A', 'Ben Tulfo': 'A'}]
 
-    queries = [{'Philippines senatorial candidates 2025': 'D'}]
-
+    # queries = [{'Philippines senatorial candidates 2025': 'D'}]
+    queries = [{'Kiko Pangilinan': 'C', 'Benhur Abalos': 'A'}]
     all_videos_data = []
 
     query = "SELECT day, month, year FROM video join date on video.date_id=date.date_id order by year desc, month desc, day desc LIMIT 1"
@@ -244,28 +244,44 @@ def gather_comments_op():
             print(f"\nProcessing query: {query_term}")
             videos = search_videos(query_term, max_results=5, published_after=published_after,
                                    published_before=published_before)
-            print("Videos Found:")
-            for video in videos:
-                print(f"{video['title']} (ID: {video['video_id']}) Published At: {video['upload_date']}")
+            print("Videos Found:", len(videos))
 
-                video_dict = {
-                    "video_id": video['video_id'],
-                    "title": video['title'],
-                    "description": video['description'],
-                    "upload_date": video['upload_date'],
-                    "channel_id": video['channel_id'],
-                    "comment_count": video['comment_count'],
+            if not videos:  # If no videos were found, insert a dummy video entry
+                print(f"No videos found for query: {query_term}. Inserting dummy entry.")
+                # Insert a dummy video record
+                dummy_video_dict = {
+                    "video_id": "dummy_video_id",
+                    "title": "No videos found for query",
+                    "description": "This is a dummy video as no videos were found for the query.",
+                    "upload_date": "2099-12-31T00:00:00Z",  # Using a dummy date
+                    "channel_id": "dummy_channel",
+                    "comment_count": 0,
                     "label": label,
                     "search_query": query_term
                 }
-                all_videos_data.append(video_dict)
+                all_videos_data.append(dummy_video_dict)
+            else:
+                for video in videos:
+                    print(f"{video['title']} (ID: {video['video_id']}) Published At: {video['upload_date']}")
 
-                # Fetch comments for each video
-                print(f"\nFetching comments for video: {video['title']} ({video['video_id']})")
-                comments_df = getcomments(video, max_comments=25)
+                    video_dict = {
+                        "video_id": video['video_id'],
+                        "title": video['title'],
+                        "description": video['description'],
+                        "upload_date": video['upload_date'],
+                        "channel_id": video['channel_id'],
+                        "comment_count": video['comment_count'],
+                        "label": label,
+                        "search_query": query_term
+                    }
+                    all_videos_data.append(video_dict)
 
-                if comments_df is not None:
-                    all_comments_data = pd.concat([all_comments_data, comments_df], ignore_index=True)
+                    # Fetch comments for each video
+                    print(f"\nFetching comments for video: {video['title']} ({video['video_id']})")
+                    comments_df = getcomments(video, max_comments=25)
+
+                    if comments_df is not None:
+                        all_comments_data = pd.concat([all_comments_data, comments_df], ignore_index=True)
 
     video_df = pd.DataFrame(all_videos_data).drop_duplicates()
 
@@ -314,8 +330,10 @@ def insert_comments_op(video_df, author_df, comment_df):
 
     existing_video_ids = [row[0] for row in rows]
 
+    filtered_comment_df = pd.DataFrame()
     # Filter out rows in comment_df with video_id already in the video table
-    filtered_comment_df = comment_df[~comment_df['video_id'].isin(existing_video_ids)]
+    if not comment_df.empty:
+        filtered_comment_df = comment_df[~comment_df['video_id'].isin(existing_video_ids)]
 
     if not video_df.empty:
         video_sql_command = insert_code(video_df, "video")
@@ -336,3 +354,4 @@ def insert_comments_op(video_df, author_df, comment_df):
 
 if __name__ == "__main__":
     gather_comments_op()
+
