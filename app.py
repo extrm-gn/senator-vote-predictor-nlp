@@ -124,7 +124,7 @@ def predict_senator(user_input_text):
 
     # Prepare results
     results = {
-        "senator_matches": [{"senator": " ".join(senator), "similarity": similarity} for senator, similarity in sorted_output[:21]],
+        "senator_matches": [{"senator": " ".join(senator[:2]), "similarity": similarity} for senator, similarity in sorted_output[:21]],
         "sentiment_label": overall_sentiment_label,
         "sentiment_score": overall_sentiment_score
     }
