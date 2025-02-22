@@ -253,7 +253,7 @@ def gather_comments_op():
                     "video_id": "dummy_video_id",
                     "title": "No videos found for query",
                     "description": "This is a dummy video as no videos were found for the query.",
-                    "upload_date": "2099-12-31T00:00:00Z",  # Using a dummy date
+                    "upload_date": "2024-10-01T00:00:00Z",  # Using a dummy date
                     "channel_id": "dummy_channel",
                     "comment_count": 0,
                     "label": label,
@@ -307,11 +307,11 @@ def gather_comments_op():
 
         author_df = all_comments_data[['author_name', 'author_id']].drop_duplicates()
 
-        all_comments_data['translated_comment_text'] = all_comments_data.apply(
-            lambda row: 'repeated comment' if row['video_id'] in existing_video_ids else get_translation(
-                row['comment_text']),
-            axis=1
-        )
+        # all_comments_data['translated_comment_text'] = all_comments_data.apply(
+        #     lambda row: 'repeated comment' if row['video_id'] in existing_video_ids else get_translation(
+        #         row['comment_text']),
+        #     axis=1
+        # )
 
         comment_df = all_comments_data[['comment_text', 'like_count', 'date_id', 'video_id', 'author_id']].drop_duplicates()
     else:
@@ -353,5 +353,6 @@ def insert_comments_op(video_df, author_df, comment_df):
     conn.close()
 
 if __name__ == "__main__":
-    gather_comments_op()
-
+    # gather_comments_op()
+    published_after, published_before = get_published_date_range()
+    print(published_after, published_before)

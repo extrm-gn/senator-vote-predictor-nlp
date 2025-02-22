@@ -21,7 +21,7 @@ sentiment_classifier = pipeline('sentiment-analysis', model=sentiment_model, tok
 nlp = spacy.load("en_core_web_sm")
 
 # Load dataset
-df = pd.read_csv("/kaggle/input/trial-csv14/output.csv")
+df = pd.read_csv("/kaggle/input/trial-csv14/9203output.csv")
 
 # Function for sentiment analysis
 def get_sentiment(text):

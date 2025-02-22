@@ -5,3 +5,4 @@ templates/
 test_gather_comments.py
 test_gather_news.py
 test_translation.py
+ops/9203output.csv
