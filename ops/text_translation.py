@@ -45,9 +45,8 @@ if __name__ == '__main__':
     cur.execute(query)
     conn.commit()
 
-    results = cur.fetchall()
-
     while True:
+        results = cur.fetchall()
         if not results:
             print("no more text to translate")
             break

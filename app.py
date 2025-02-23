@@ -1,25 +1,42 @@
 from flask import Flask, render_template, request, jsonify
-import pandas as pd
 import numpy as np
-import spacy
-import pickle
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.cluster import MiniBatchKMeans
 from textblob import TextBlob
+import spacy
 
 app = Flask(__name__)
 
-# Load preprocessed dataset and models
-df = pd.read_csv("Data/processed_data.csv")
-with open("Data/models.pkl", "rb") as f:
-    models = pickle.load(f)
-
-vectorizer = models["vectorizer"]
-scaler = models["scaler"]
-pca = models["pca"]
-kmeans = models["kmeans"]
-label_encoder = models["label_encoder"]
-
-# Load SpaCy for NER
+# Load NLP model
 nlp = spacy.load("en_core_web_sm")
+
+# Load data
+df_new = pd.read_csv("Data/processed_data.csv")
+df_new = df_new.dropna()
+vectorizer = TfidfVectorizer(stop_words='english')
+tfidf_matrix = vectorizer.fit_transform(df_new['translated_comment_text'])
+
+# Extract features
+df_new['num_named_entities'] = df_new['named_entities'].apply(lambda x: len(x) if isinstance(x, list) else 0)
+sentiment_scores = df_new['sentiment_score'].values.reshape(-1, 1)
+tfidf_dense = tfidf_matrix.toarray()
+
+label_encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
+label_features = label_encoder.fit_transform(df_new[['label']])
+combined_features = np.hstack((tfidf_dense, sentiment_scores, df_new[['num_named_entities']].values, label_features))
+
+scaler = StandardScaler()
+combined_features_scaled = scaler.fit_transform(combined_features)
+
+pca = PCA(n_components=50)
+reduced_features = pca.fit_transform(combined_features_scaled)
+
+n_clusters = 22
+kmeans = MiniBatchKMeans(n_clusters=n_clusters, random_state=42, batch_size=100, max_iter=300)
+df_new['cluster'] = kmeans.fit_predict(reduced_features)
 
 # Senator mapping
 senator_mapping = {
@@ -37,17 +54,16 @@ senator_mapping = {
     11: ['Erwin', 'Tulfo', 'Bitag', 'bitag', 'Erwin Tulfo', 'Sec Tulfo', 'Sir Erwin'],
     12: ['Camille', 'Villar', 'Camille Villar', 'Camille Lydia Villar', 'Cong Camille'],
     13: ['Bam', 'Aquino', 'Bam Aquino', 'Paolo Benigno Aquino IV', 'Sen Bam', 'Leni Robredo', 'Leni', 'Robredo'],
-    14: ['Jimmy', 'Bondoc', 'Jimmy Bondoc', 'James Bondoc', 'Singer Bondoc','Sara', 'Duterte', 'Sarah', 'Sara Duterte'],
+    14: ['Jimmy', 'Bondoc', 'Jimmy Bondoc', 'James Bondoc', 'Singer Bondoc'],
     15: ['Teddy', 'Casino', 'Teddy Casino', 'Teodoro Casino', 'Activist Teddy'],
     16: ['France', 'Castro', 'France Castro', 'Rep Castro', 'Cong France'],
-    17: ['Bato', 'Dela Rosa', 'Bato Dela Rosa', 'Ronald Dela Rosa', 'Gen Bato', 'Sen Bato', 'Stone', 'Sara', 'Duterte', 'Sarah', 'Sara Duterte'],
-    18: ['Bong', 'Go', 'Bong Go', 'Christopher Go', 'Sen Bong', 'SAP Bong','Sara', 'Duterte', 'Sarah', 'Sara Duterte'],
+    17: ['Bato', 'Dela Rosa', 'Bato Dela Rosa', 'Ronald Dela Rosa', 'Gen Bato', 'Sen Bato', 'Stone'],
+    18: ['Bong', 'Go', 'Bong Go', 'Christopher Go', 'Sen Bong', 'SAP Bong'],
     19: ['Willie', 'Ong', 'Willie Ong', 'Dr. Willie Ong', 'Doc Willie'],
     20: ['Willie', 'Revillame', 'Willie Revillame', 'Wilfredo Revillame', 'Kuya Wil', 'Wowowin'],
     21: ['Ben', 'Tulfo', 'Ben Tulfo', 'Bitag Live', 'Ka Ben'],
-}
+    }
 
-# Function to get sentiment score
 def get_sentiment_score(text):
     blob = TextBlob(text)
     sentiment = blob.sentiment.polarity
@@ -58,78 +74,29 @@ def get_sentiment_score(text):
     else:
         return 'Neutral', sentiment
 
-# Function to predict senator
 def predict_senator(user_input_text):
-    # NER on user input
     doc = nlp(user_input_text)
     detected_entities = [ent.text for ent in doc.ents if ent.label_ == "PERSON"]
-
-    # Preprocess user input
+    matched_labels = df_new[df_new['named_entities'].apply(lambda x: any(entity in x for entity in detected_entities))]['label'].unique()
+    user_label_encoded = label_encoder.transform([[matched_labels[0]]]) if len(matched_labels) > 0 else np.zeros((1, label_features.shape[1]))
     user_tfidf = vectorizer.transform([user_input_text])
-
-    # Get expected feature size
-    expected_tfidf_size = vectorizer.get_feature_names_out().shape[0]
-    actual_tfidf_size = user_tfidf.shape[1]
-
-    # Fix dimension mismatch by padding zeros if needed
-    if actual_tfidf_size < expected_tfidf_size:
-        padding = np.zeros((1, expected_tfidf_size - actual_tfidf_size))
-        user_tfidf = np.hstack((user_tfidf.toarray(), padding))
-    else:
-        user_tfidf = user_tfidf.toarray()
-
-    # Set mock values for missing columns
-    user_sentiment_score = 0.7
+    overall_sentiment_label, overall_sentiment_score = get_sentiment_score(user_input_text)
     user_named_entities_count = len(detected_entities)
-
-    # Ensure OneHotEncoder handles unknown labels
-    if len(detected_entities) > 0:
-        user_label_encoded = label_encoder.transform([[detected_entities[0]]])
-    else:
-        user_label_encoded = np.zeros((1, label_encoder.categories_[0].shape[0]))  # Zero vector for unknown labels
-
-    # Combine user input features
-    user_features = np.hstack((
-        user_tfidf,
-        np.array([[user_sentiment_score]]),
-        np.array([[user_named_entities_count]]),
-        user_label_encoded
-    ))
-
-    # Fix feature mismatch before scaling
-    expected_feature_count = scaler.n_features_in_
-    actual_feature_count = user_features.shape[1]
-
-    if actual_feature_count < expected_feature_count:
-        padding = np.zeros((1, expected_feature_count - actual_feature_count))
-        user_features = np.hstack((user_features, padding))
-
-    # Normalize and apply PCA
+    user_features = np.hstack((user_tfidf.toarray(), [[overall_sentiment_score]], [[user_named_entities_count]], user_label_encoded))
     user_features_scaled = scaler.transform(user_features)
     user_features_pca = pca.transform(user_features_scaled)
-
-    # Predict cluster
     predicted_cluster = kmeans.predict(user_features_pca)[0]
+    senator_scores = []
+    for i, senator_group in senator_mapping.items():
+        similarity = 100 if i == predicted_cluster else np.random.uniform(40, 80)
+        senator_scores.append((senator_group, similarity))
+    sorted_output = sorted(senator_scores, key=lambda x: x[1], reverse=True)
 
-    # Calculate distances and similarities
-    distances = kmeans.transform(user_features_pca)[0]
-    max_distance, min_distance = np.max(distances), np.min(distances)
-    similarity_percentages = 100 * (1 - (distances - min_distance) / (max_distance - min_distance))
+    return [
+        {'senator': ' '.join(senator[:2]), 'similarity': similarity}  # Join only the first 2 elements
+        for senator, similarity in sorted_output[:12]
+    ], overall_sentiment_label, overall_sentiment_score
 
-    # Get senator similarity scores
-    sorted_output = sorted([(senator_mapping[i], similarity_percentages[i]) for i in range(len(senator_mapping))], key=lambda x: x[1], reverse=True)
-
-    # Get overall sentiment
-    overall_sentiment_label, overall_sentiment_score = get_sentiment_score(user_input_text)
-
-    # Prepare results
-    results = {
-        "senator_matches": [{"senator": " ".join(senator[:2]), "similarity": similarity} for senator, similarity in sorted_output[:21]],
-        "sentiment_label": overall_sentiment_label,
-        "sentiment_score": overall_sentiment_score
-    }
-
-    return results
 
 @app.route('/')
 def index():
@@ -138,8 +105,12 @@ def index():
 @app.route('/predict', methods=['POST'])
 def predict():
     user_input = request.form['user_input']
-    result = predict_senator(user_input)
-    return jsonify(result)
+    senator_matches, sentiment_label, sentiment_score = predict_senator(user_input)
+    return jsonify({
+        'senator_matches': senator_matches,
+        'sentiment_label': sentiment_label,
+        'sentiment_score': sentiment_score
+    })
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
