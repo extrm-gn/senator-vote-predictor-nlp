@@ -16,6 +16,8 @@ youtube = googleapiclient.discovery.build(
     api_service_name, api_version, developerKey=DEVELOPER_KEY
 )
 
+MAX_COMMENT_LENGTH = 2000
+
 
 def get_video_details(video_id):
     """Fetch video details like title and publishing date."""
@@ -110,6 +112,12 @@ def getcomments(video, max_comments=99):
                 comment = item['snippet']['topLevelComment']['snippet']
                 public = item['snippet']['isPublic']
                 author_channel_id = comment.get('authorChannelId', {}).get('value', None)
+                comment_text = comment['textOriginal']
+
+                if len(comment_text) > MAX_COMMENT_LENGTH:
+                    print(f"Skipping long comment ({len(comment_text)} chars) for video {video['video_id']}.")
+                    continue
+
                 comments.append([
                     video_title,
                     video_published_at,
@@ -227,7 +235,7 @@ def gather_comments_op():
                 'Bato Dela Rosa': 'B', 'Bong Go': 'B', 'Willie Ong': 'A', 'Willie Revillame': 'A', 'Ben Tulfo': 'A'}]
 
     # queries = [{'Philippines senatorial candidates 2025': 'D'}]
-    queries = [{'Kiko Pangilinan': 'C', 'Benhur Abalos': 'A'}]
+    # queries = [{'Kiko Pangilinan': 'C', 'Benhur Abalos': 'A'}]
     all_videos_data = []
 
     query = "SELECT day, month, year FROM video join date on video.date_id=date.date_id order by year desc, month desc, day desc LIMIT 1"
@@ -242,7 +250,7 @@ def gather_comments_op():
     for query_dict in queries:
         for query_term, label in query_dict.items():
             print(f"\nProcessing query: {query_term}")
-            videos = search_videos(query_term, max_results=5, published_after=published_after,
+            videos = search_videos(query_term, max_results=10, published_after=published_after,
                                    published_before=published_before)
             print("Videos Found:", len(videos))
 
@@ -353,6 +361,6 @@ def insert_comments_op(video_df, author_df, comment_df):
     conn.close()
 
 if __name__ == "__main__":
-    # gather_comments_op()
+    gather_comments_op()
     published_after, published_before = get_published_date_range()
     print(published_after, published_before)
