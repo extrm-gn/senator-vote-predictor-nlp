@@ -14,7 +14,7 @@ app = Flask(__name__)
 nlp = spacy.load("en_core_web_sm")
 
 # Load data
-df_new = pd.read_csv("Data/processed_data.csv")
+df_new = pd.read_csv("Data/processed_data2.csv", usecols=['translated_comment_text', 'named_entities', 'sentiment_score', 'label'])
 df_new = df_new.dropna()
 vectorizer = TfidfVectorizer(stop_words='english')
 tfidf_matrix = vectorizer.fit_transform(df_new['translated_comment_text'])
