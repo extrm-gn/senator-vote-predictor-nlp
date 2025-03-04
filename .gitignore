@@ -1,7 +1,6 @@
 .env
 output.csv
-Data/
-templates/
+Data/processed_data.csv
 test_gather_comments.py
 test_gather_news.py
 test_translation.py

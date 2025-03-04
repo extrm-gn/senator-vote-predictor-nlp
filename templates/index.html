@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Philippine Midterm Election 2025 - Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --background-color: #ecf0f1;
+            --text-color: #34495e;
+            --card-bg: #ffffff;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 1000px;
+            width: 90%;
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+<!--        .container:hover {-->
+<!--            transform: translateY(-5px);-->
+<!--        }-->
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        main {
+            padding: 40px;
+        }
+        h2, h3 {
+            color: var(--primary-color);
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            width: calc(100% - 35px);
+            position: relative;
+            margin-bottom: 30px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+        #sentimentResult {
+            font-weight: 600;
+            font-size: 1.2em;
+            padding: 12px 15px;
+            border-radius: 8px;
+            color: white;
+            text-align: center;
+            min-width: 180px; /* Ensures consistency */
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        #result {
+            margin-top: 40px;
+        }
+        .senators-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .senator-box {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s ease;
+            font-weight: 600;
+        }
+        .senator-box:hover {
+            transform: translateX(5px);
+        }
+        .senator-number {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .match-percentage {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            text-align: right;
+            min-width: 50px;
+        }
+
+        @media (max-width: 768px) {
+            .senators-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        footer {
+        text-align: center;
+        padding: 15px;
+        background: rgba(44, 62, 80, 0.9); /* Slight transparency */
+        color: white;
+        font-size: 14px;
+        border-top: 3px solid var(--secondary-color);
+        margin-top: 30px;
+    }
+
+    .footer-links {
+        margin-top: 8px;
+    }
+
+    .footer-links a {
+        color: var(--secondary-color);
+        text-decoration: none;
+        font-weight: 600;
+        margin: 0 8px;
+        transition: color 0.3s ease;
+    }
+
+    .footer-links a:hover {
+        color: var(--accent-color);
+    }
+
+    .footer-links span {
+        color: #ccc;
+    }
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Philippine Midterm Election 2025</h1>
+        </header>
+        <main>
+            <form id="predictForm">
+                <h2>Enter Your Political Comment</h2>
+                <div class="input-group">
+                    <input type="text" id="user_input" placeholder="Type your comment here..." required>
+                </div>
+                <button type="submit">Predict Senators</button>
+            </form>
+            <div class="loading" id="loading"></div>
+            <div id="result" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted Senators</h3>
+                <div id="sentimentResult"></div>
+            </div>
+            <div class="senators-grid" id="senatorGrid"></div>
+        </div>
+
+        </main>
+        <footer>
+            <p>&copy; 2025 Marc Linus Rosales. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="https://github.com/extrm-gn" target="_blank">GitHub</a>
+                <span>|</span>
+                <a href="https://www.linkedin.com/in/marc-linus-rosales/" target="_blank">LinkedIn</a>
+                <span>|</span>
+                <a href="https://marclinus.github.io/" target="_blank">Portfolio Website</a>
+
+            </div>
+        </footer>
+    </div>
+    <script>
+        document.getElementById('predictForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            let userInput = document.getElementById('user_input').value;
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'user_input=' + encodeURIComponent(userInput)
+            })
+            .then(response => response.json())
+            .then(data => updateResults(data))
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('loading').style.display = 'none';
+                alert('An error occurred. Please try again.');
+            });
+        });
+
+        function updateResults(data) {
+            const senatorGrid = document.getElementById('senatorGrid');
+            senatorGrid.innerHTML = '';
+
+            data.senator_matches.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.classList.add('senator-box');
+                div.innerHTML = `
+                    <span class="senator-number">${index + 1}.</span>
+                    <span>${item.senator}</span>
+                    <span class="match-percentage">${item.similarity.toFixed(2)}%</span>
+                `;
+                senatorGrid.appendChild(div);
+            });
+
+            const sentimentResult = document.getElementById('sentimentResult');
+            sentimentResult.textContent = `Sentiment Analysis: ${data.sentiment_label} (Score: ${data.sentiment_score.toFixed(2)})`;
+
+            if (data.sentiment_label === 'Positive') {
+                sentimentResult.style.backgroundColor = '#4CAF50';
+            } else if (data.sentiment_label === 'Negative') {
+                sentimentResult.style.backgroundColor = '#F44336';
+            } else {
+                sentimentResult.style.backgroundColor = '#FFC107';
+            }
+            sentimentResult.style.color = 'white';
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('result').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
