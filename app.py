@@ -1,10 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import numpy as np
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.decomposition import PCA
-from sklearn.cluster import MiniBatchKMeans
+import pickle
 from textblob import TextBlob
 import spacy
 
@@ -13,30 +9,17 @@ app = Flask(__name__)
 # Load NLP model
 nlp = spacy.load("en_core_web_sm")
 
-# Load data
-df_new = pd.read_csv("Data/processed_data2.csv", usecols=['translated_comment_text', 'named_entities', 'sentiment_score', 'label'])
-df_new = df_new.dropna()
-vectorizer = TfidfVectorizer(stop_words='english')
-tfidf_matrix = vectorizer.fit_transform(df_new['translated_comment_text'])
-
-# Extract features
-df_new['num_named_entities'] = df_new['named_entities'].apply(lambda x: len(x) if isinstance(x, list) else 0)
-sentiment_scores = df_new['sentiment_score'].values.reshape(-1, 1)
-tfidf_dense = tfidf_matrix.toarray()
-
-label_encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
-label_features = label_encoder.fit_transform(df_new[['label']])
-combined_features = np.hstack((tfidf_dense, sentiment_scores, df_new[['num_named_entities']].values, label_features))
-
-scaler = StandardScaler()
-combined_features_scaled = scaler.fit_transform(combined_features)
-
-pca = PCA(n_components=50)
-reduced_features = pca.fit_transform(combined_features_scaled)
-
-n_clusters = 22
-kmeans = MiniBatchKMeans(n_clusters=n_clusters, random_state=42, batch_size=100, max_iter=300)
-df_new['cluster'] = kmeans.fit_predict(reduced_features)
+# Load pre-trained models
+with open("Data/model.pkl", "rb") as f:
+    model = pickle.load(f)
+with open("Data/vectorizer.pkl", "rb") as f:
+    vectorizer = pickle.load(f)
+with open("Data/scaler.pkl", "rb") as f:
+    scaler = pickle.load(f)
+with open("Data/pca.pkl", "rb") as f:
+    pca = pickle.load(f)
+with open("Data/label_encoder.pkl", "rb") as f:
+    label_encoder = pickle.load(f)
 
 # Senator mapping
 senator_mapping = {
@@ -64,6 +47,7 @@ senator_mapping = {
     21: ['Ben', 'Tulfo', 'Ben Tulfo', 'Bitag Live', 'Ka Ben'],
     }
 
+# Function to analyze sentiment
 def get_sentiment_score(text):
     blob = TextBlob(text)
     sentiment = blob.sentiment.polarity
@@ -74,29 +58,37 @@ def get_sentiment_score(text):
     else:
         return 'Neutral', sentiment
 
+# Function to predict senator
 def predict_senator(user_input_text):
     doc = nlp(user_input_text)
     detected_entities = [ent.text for ent in doc.ents if ent.label_ == "PERSON"]
-    matched_labels = df_new[df_new['named_entities'].apply(lambda x: any(entity in x for entity in detected_entities))]['label'].unique()
-    user_label_encoded = label_encoder.transform([[matched_labels[0]]]) if len(matched_labels) > 0 else np.zeros((1, label_features.shape[1]))
+
+    # Transform input text
     user_tfidf = vectorizer.transform([user_input_text])
     overall_sentiment_label, overall_sentiment_score = get_sentiment_score(user_input_text)
     user_named_entities_count = len(detected_entities)
+
+    # Prepare feature vector (assuming one-hot encoding size is same as trained model)
+    user_label_encoded = np.zeros((1, label_encoder.categories_[0].shape[0]))
+
     user_features = np.hstack((user_tfidf.toarray(), [[overall_sentiment_score]], [[user_named_entities_count]], user_label_encoded))
     user_features_scaled = scaler.transform(user_features)
     user_features_pca = pca.transform(user_features_scaled)
-    predicted_cluster = kmeans.predict(user_features_pca)[0]
+
+    # Predict using pre-trained model
+    predicted_cluster = model.predict(user_features_pca)[0]
+
     senator_scores = []
     for i, senator_group in senator_mapping.items():
         similarity = 100 if i == predicted_cluster else np.random.uniform(40, 80)
         senator_scores.append((senator_group, similarity))
+
     sorted_output = sorted(senator_scores, key=lambda x: x[1], reverse=True)
 
     return [
-        {'senator': ' '.join(senator[:2]), 'similarity': similarity}  # Join only the first 2 elements
+        {'senator': ' '.join(senator[:2]), 'similarity': similarity}
         for senator, similarity in sorted_output[:12]
     ], overall_sentiment_label, overall_sentiment_score
-
 
 @app.route('/')
 def index():
