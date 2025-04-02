@@ -1,6 +1,7 @@
 # 🏛️ Senator Election Prediction Using YouTube Comments
 
 ## 📌 Overview
+🔗 **Live Demo:** [Senator Vote Predictor](https://senator-vote-predictor.onrender.com)
 This project leverages YouTube comments to predict likely elected senators using Natural Language Processing (NLP) and machine learning techniques. The system extracts, processes, and analyzes user opinions to gauge political trends and forecast election outcomes.
 
 ## 🚀 Technologies Used
@@ -57,6 +58,6 @@ This project is licensed under the **MIT License**.
 
 ---
 
-👤 **Author:** Marc Linus D. Rosales  
-🔗 **GitHub:** [extrm-gn](https://github.com/https://github.com/extrm-gn)
+👤 **Author:** Marc Linus D. Rosales 
+🔗 **GitHub:** [extrm-gn](https://github.com/extrm-gn)
 
